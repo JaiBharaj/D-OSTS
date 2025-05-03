@@ -1,7 +1,7 @@
 import time
 import math
 import random
-from CoordinateTransformations import InitialConditions
+from CrudeInitialConditions import InitialConditions
 
 true_filename = 'trajectory.txt'
 pred_filename = 'predicted_trajectory.txt'
