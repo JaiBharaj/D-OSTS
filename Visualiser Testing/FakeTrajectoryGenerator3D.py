@@ -11,7 +11,7 @@ earth_radius = InitialConditions.earthRadius
 altitude = InitialConditions.initSatAlt
 orbital_radius = earth_radius + altitude
 angular_velocity = 2 * math.pi / 90  # Rad p/s
-dt = 0.2
+dt = 0.02
 
 # Clear files at start
 open(true_filename, 'w').close()
@@ -45,6 +45,6 @@ while orbital_radius >= earth_radius:
 
     theta += angular_velocity * dt
     phi += 0.001 * math.pi * dt
-    time.sleep(dt)
-    orbital_radius -= 1000
+    # time.sleep(dt)
+    orbital_radius -= 1
     step += 1

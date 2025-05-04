@@ -11,7 +11,7 @@ earth_radius = InitialConditions.earthRadius
 altitude = InitialConditions.initSatAlt
 orbital_radius = earth_radius + altitude
 angular_velocity = 2 * math.pi / 90 # Rad p/s
-dt = 0.2
+dt = 0.02
 
 # Clear files at start
 open(true_filename, 'w').close()
@@ -34,7 +34,7 @@ while orbital_radius >= earth_radius:
     uncertainty = max(10000, 40000 - step * 100)
     pred_x = x + random.gauss(0, uncertainty)
     pred_y = y + random.gauss(0, uncertainty)
-    is_measurement = 1 if step % 25 == 0 else 0  # Every 25 steps is a measurement from radar station
+    is_measurement = 1 if step % 2500 == 0 else 0  # Every 25 steps is a measurement from radar station
 
     # Write prediction
     with open(pred_filename, 'a') as f:
@@ -42,6 +42,6 @@ while orbital_radius >= earth_radius:
         f.flush()
 
     theta += angular_velocity * dt
-    time.sleep(dt)
-    orbital_radius -= 1000
+    # time.sleep(dt)
+    orbital_radius -= 1
     step += 1

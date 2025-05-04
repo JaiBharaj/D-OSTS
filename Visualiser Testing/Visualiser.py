@@ -8,6 +8,8 @@ from matplotlib.patches import Polygon
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from CrudeInitialConditions import InitialConditions
 import threading
+from queue import Queue, Empty
+from collections import deque
 
 class Visualiser2D:
     def __init__(self, trajectory_file_path, prediction_file_path, break_point=0):
@@ -24,8 +26,8 @@ class Visualiser2D:
         self.trajectory = []
         self.predictions = []
         self.data_lock = threading.Lock()
-        self.new_position = None
-        self.new_prediction = None
+        self.position_queue = Queue()
+        self.prediction_queue = Queue()
         self.uncertainty_polygon = None
 
         # Setup figure
@@ -104,7 +106,7 @@ class Visualiser2D:
                 line = f.readline()
                 if not line:
                     f.seek(pos)
-                    time.sleep(0.05)
+                    #time.sleep(0.005)
                     continue
                 try:
                     x, y = map(float, line.strip().split())
@@ -119,7 +121,7 @@ class Visualiser2D:
                 line = f.readline()
                 if not line:
                     f.seek(pos)
-                    time.sleep(0.05)
+                    #time.sleep(0.0001)
                     continue
                 try:
                     parts = line.strip().split()
@@ -135,44 +137,48 @@ class Visualiser2D:
 
         while True:
             try:
-                with self.data_lock:
-                    self.new_position = next(pos_gen)
-                    self.new_prediction = next(pred_gen)
+                self.position_queue.put(next(pos_gen))
+                self.prediction_queue.put(next(pred_gen))
             except StopIteration:
                 pass
-            time.sleep(0.05)
+            time.sleep(0.00001)
 
     def update(self, frame):
+        MAX_STEPS = 500
+
         artists = [self.trajectory_line_full, self.satellite_dot_full,
                    self.trajectory_line_zoom, self.satellite_dot_zoom,
-                   self.pred_line_full, self.pred_line_zoom,
+                   self.pred_line_full, self.pred_dot_full,
+                   self.pred_line_zoom, self.pred_dot_zoom,
                    self.pred_measurements_zoom, self.altitude_text]
 
         try:
-            # Get current data
-            with self.data_lock:
-                current_pos = self.new_position
-                current_pred = self.new_prediction
+            # Drain all new position data
+            while True:
+                try:
+                    current_pos = self.position_queue.get_nowait()
+                    x, y = current_pos
+                    self.trajectory.append((x, y))
+                    if len(self.trajectory) > MAX_STEPS:
+                        self.trajectory = self.trajectory[-MAX_STEPS:]
+                except Empty:
+                    break
 
             # Update actual trajectory
-            if current_pos:
-                x, y = current_pos
-                self.trajectory.append((x, y))
-
-                xs, ys = zip(*self.trajectory) if len(self.trajectory) > 1 else ([x], [y])
+            if self.trajectory:
+                xs, ys = zip(*self.trajectory)
+                x, y = self.trajectory[-1]
 
                 self.trajectory_line_full.set_data(xs, ys)
                 self.satellite_dot_full.set_data([x], [y])
                 self.trajectory_line_zoom.set_data(xs, ys)
                 self.satellite_dot_zoom.set_data([x], [y])
 
-                # Dynamic zoom window
                 current_dist = np.hypot(x, y)
                 zoom_width = max(500000, current_dist / 3)
                 self.ax_zoom.set_xlim(x - zoom_width / 6, x + zoom_width / 6)
                 self.ax_zoom.set_ylim(y - zoom_width / 6, y + zoom_width / 6)
 
-                # Update altitude display
                 altitude = current_dist - self.earth_radius
                 self.altitude_text.set_text(f"Altitude: {altitude / 1000:.1f} km\n"
                                             f"Distance: {current_dist / 1000:.1f} km")
@@ -182,40 +188,46 @@ class Visualiser2D:
                     self.altitude_text.set_text(f"IMPACT!\nFinal altitude: {altitude:.1f} m")
                     return artists
 
+            # Drain all new prediction data
+            while True:
+                try:
+                    current_pred = self.prediction_queue.get_nowait()
+                    self.predictions.append(current_pred)
+                    if len(self.predictions) > MAX_STEPS:
+                        self.predictions = self.predictions[-MAX_STEPS:]
+                except Empty:
+                    break
+
             # Update predicted trajectory with uncertainty
-            if current_pred:
-                pred_x, pred_y, std_x, std_y, is_meas = current_pred
-                self.predictions.append((pred_x, pred_y, std_x, std_y, is_meas))
+            if self.predictions:
+                pred_xs, pred_ys, std_xs, std_ys, meas_flags = zip(*self.predictions)
+                pred_x, pred_y = pred_xs[-1], pred_ys[-1]
 
-                if self.predictions:
-                    pred_xs, pred_ys, std_xs, std_ys, meas_flags = zip(*self.predictions)
+                self.pred_line_full.set_data(pred_xs, pred_ys)
+                self.pred_dot_full.set_data([pred_x], [pred_y])
+                self.pred_line_zoom.set_data(pred_xs, pred_ys)
+                self.pred_dot_zoom.set_data([pred_x], [pred_y])
 
-                    # Update prediction lines
-                    self.pred_line_full.set_data(pred_xs, pred_ys)
-                    self.pred_dot_full.set_data([pred_x], [pred_y])
-                    self.pred_line_zoom.set_data(pred_xs, pred_ys)
-                    self.pred_dot_zoom.set_data([pred_x], [pred_y])
+                # Remove old uncertainty polygon
+                if self.uncertainty_polygon is not None:
+                    self.uncertainty_polygon.remove()
 
-                    # Remove old uncertainty polygon
-                    if self.uncertainty_polygon is not None:
-                        self.uncertainty_polygon.remove()
+                # Create new uncertainty polygon
+                polygon_points = []
+                for x, y, sx, sy in zip(pred_xs, pred_ys, std_xs, std_ys):
+                    polygon_points.append((x - sx, y - sy))
+                for x, y, sx, sy in reversed(list(zip(pred_xs, pred_ys, std_xs, std_ys))):
+                    polygon_points.append((x + sx, y + sy))
 
-                    # Create new uncertainty polygon
-                    polygon_points = []
-                    for x, y, sx, sy in zip(pred_xs, pred_ys, std_xs, std_ys):
-                        polygon_points.append((x - sx, y - sy))
-                    for x, y, sx, sy in reversed(list(zip(pred_xs, pred_ys, std_xs, std_ys))):
-                        polygon_points.append((x + sx, y + sy))
+                self.uncertainty_polygon = Polygon(polygon_points, closed=True,
+                                                   color='blue', alpha=0.15, zorder=2)
+                self.ax_zoom.add_patch(self.uncertainty_polygon)
+                artists.append(self.uncertainty_polygon)
 
-                    self.uncertainty_polygon = Polygon(polygon_points, closed=True,
-                                                       color='blue', alpha=0.15, zorder=2)
-                    self.ax_zoom.add_patch(self.uncertainty_polygon)
-                    artists.append(self.uncertainty_polygon)
-
-                    # Update measurement points
-                    meas_xs = [x for x, flag in zip(pred_xs, meas_flags) if flag]
-                    meas_ys = [y for y, flag in zip(pred_ys, meas_flags) if flag]
-                    self.pred_measurements_zoom.set_data(meas_xs, meas_ys)
+                # Update measurement points
+                meas_xs = [x for x, flag in zip(pred_xs, meas_flags) if flag]
+                meas_ys = [y for y, flag in zip(pred_ys, meas_flags) if flag]
+                self.pred_measurements_zoom.set_data(meas_xs, meas_ys)
 
         except Exception as e:
             print(f"Animation error: {e}")
@@ -231,7 +243,7 @@ class Visualiser2D:
         self.ani = animation.FuncAnimation(
             self.fig, self.update,
             frames=1000,
-            interval=100,
+            interval=50,
             blit=False,
             cache_frame_data=False
         )
@@ -240,7 +252,7 @@ class Visualiser2D:
         plt.show()
 
 class Visualiser3D:
-    def __init__(self, trajectory_file_path, prediction_file_path, break_point=0):
+    def __init__(self, trajectory_file_path, prediction_file_path, break_point=0, MAX_STEPS=500):
         # Initialise parameters
         self.earth_radius = InitialConditions.earthRadius
         self.stop_distance = self.earth_radius + break_point
@@ -251,8 +263,8 @@ class Visualiser3D:
         self.PREDICTION_FILE = prediction_file_path
 
         # Data storage
-        self.trajectory = []
-        self.predictions = []
+        self.trajectory = deque(maxlen=MAX_STEPS)
+        self.predictions = deque(maxlen=MAX_STEPS)
         self.data_lock = threading.Lock()
         self.new_position = None
         self.new_prediction = None
@@ -369,7 +381,7 @@ class Visualiser3D:
                 line = f.readline()
                 if not line:
                     f.seek(pos)
-                    time.sleep(0.05)
+                    # time.sleep(0.05)
                     continue
                 try:
                     x, y, z = map(float, line.strip().split())
@@ -384,7 +396,7 @@ class Visualiser3D:
                 line = f.readline()
                 if not line:
                     f.seek(pos)
-                    time.sleep(0.05)
+                    # time.sleep(0.05)
                     continue
                 try:
                     parts = line.strip().split()
@@ -405,7 +417,7 @@ class Visualiser3D:
                     self.new_prediction = next(pred_gen)
             except StopIteration:
                 pass
-            time.sleep(0.05)
+            time.sleep(0.00001)
 
     def create_uncertainty_tube(self, points, std_devs):
         vertices = []
@@ -551,7 +563,7 @@ class Visualiser3D:
         self.ani = animation.FuncAnimation(
             self.fig, self.update,
             frames=1000,
-            interval=100,
+            interval=50,
             blit=False,
             cache_frame_data=False
         )
@@ -562,5 +574,5 @@ class Visualiser3D:
 # vis = Visualiser2D('trajectory.txt', 'predicted_trajectory.txt', break_point=100)
 # vis.visualise()
 
-vis = Visualiser3D('trajectory_3d.txt', 'predicted_trajectory_3d.txt', break_point=100)
+vis = Visualiser3D('trajectory_3d.txt', 'predicted_trajectory_3d.txt', break_point=0, MAX_STEPS=100)
 vis.visualise()
