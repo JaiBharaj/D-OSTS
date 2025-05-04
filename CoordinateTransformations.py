@@ -1,19 +1,6 @@
 import numpy as np
-
-# Placeholder Atmospheric Density Model
-def atmospheric_density():
-    return 1
-
-# Placeholder Initial Conditions Class
-class InitialConditions:
-
-    dragCoeff = 2
-    crossSec = 20
-    satMass = 20
-    initSatAlt = 600000
-    earthMass = 6E+24
-    earthRadius = 6.37E+6
-    gravConstant = 6.67E-11
+from CrudeInitialConditions import InitialConditions
+from Atmospheric_Density import atmospheric_density
 
 class PolarAccelerations:
 
@@ -24,8 +11,11 @@ class PolarAccelerations:
 
     # First part of Drag term: consistent for Spherical coordinates
     @staticmethod
-    def drag_start(C_d, A, m):
-        return atmospheric_density * C_d * A / (2 * m)
+    def drag_start(C_d, A, m, r):
+        Re = InitialConditions.earthRadius
+        h = r - Re
+        result = 0.5 * atmospheric_density(h) * C_d * A / m
+        return result
 
     # Polar Acceleration functions to be passed into RK45
     @staticmethod
@@ -40,9 +30,10 @@ class PolarAccelerations:
         :return: [Radial Velocity, Radial Acceleration, Angular Velocity, Angular Acceleration]
         '''
 
-        dt_start = PolarAccelerations.drag_start(C_d=InitialConditions.dragCoeff,
-                                                 A=InitialConditions.crossSec,
-                                                 m=InitialConditions.satMass)
+        dt_start = PolarAccelerations.drag_start(InitialConditions.dragCoeff,
+                                                 InitialConditions.crossSec,
+                                                 InitialConditions.satMass,
+                                                 u1)
 
         vel_mag = PolarAccelerations.comb_velocity(u1, u2, u4)
 
@@ -84,7 +75,6 @@ class SphericalAccelerations(PolarAccelerations):
         u3_dot = u4
         u4_dot = - 2 * u2 * u4 / u1 + np.sin(u3) * np.cos(u3) * u6**2 - dt_start * u4 * vel_mag
         u5_dot = u6
-        u6_dot = - 2 * u2 * u6 / u1 - 2 * np.cot(u3) * u4 * u6 - dt_start * u6 * vel_mag
+        u6_dot = - 2 * u2 * u6 / u1 - 2 * (1 / np.tan(u3)) * u4 * u6 - dt_start * u6 * vel_mag
 
         return np.array([u1_dot, u2_dot, u3_dot, u4_dot, u5_dot, u6_dot])
-
