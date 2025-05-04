@@ -1,8 +1,6 @@
 import numpy as np
-import Atmospheric_Density
+from Atmospheric_Density import atmos_ussa1976_rho as atmospheric_density
 from CrudeInitialConditions import InitialConditions
-
-atmospheric_density = Atmospheric_Density.atmos_ussa1976_rho()
 
 class PolarAccelerations:
 
