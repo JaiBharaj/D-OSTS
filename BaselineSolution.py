@@ -1,9 +1,8 @@
 import numpy as np
-
-import CoordinateTransformations
 from CrudeInitialConditions import InitialConditions
 import Atmospheric_Density
 import RadarClass
+from CoordinateTransformations import PolarAccelerations
 from NumericalIntegrator import Integrator
 from ExtendedKalmanFilters import ExtendedKalmanFilter, compute_F_analytic
 from Visualiser import Visualiser2D
@@ -68,7 +67,11 @@ A = InitialConditions.crossSec
 m = InitialConditions.satMass
 GM = InitialConditions.gravConstant * InitialConditions.earthMass
 
-f_jacobian = lambda x: compute_F_analytic(x, CD, A, m, GM, Atmospheric_Density.atmos_ussa1976_rho())
+f_jacobian = lambda x: compute_F_analytic(
+    x, CD, A, m, GM,
+    lambda r: Atmospheric_Density.atmos_ussa1976_rho(r - InitialConditions.earthRadius)
+)
+
 x0 = np.array([Integrator.r0, 0.0, 0.0, np.sqrt(GM / Integrator.r0) / Integrator.r0])
 
 # Load radar data
@@ -77,7 +80,7 @@ times = data[:, 0]
 measurements = data[:, 1:3]
 
 ekf = ExtendedKalmanFilter(
-    f_dynamics=CoordinateTransformations.PolarAccelerations,
+    f_dynamics=lambda x: PolarAccelerations.accelerations(x[0], x[1], x[2], x[3]),
     f_jacobian=f_jacobian,
     H=H,
     Q=Q,

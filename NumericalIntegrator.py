@@ -17,17 +17,21 @@ class Integrator:
 
     @staticmethod
     def ode_system(t, u):
+        u = np.asarray(u).flatten()
+        if len(u) != 4:
+            raise ValueError(f"Expected 4D state vector, got {len(u)} elements")
         u1, u2, u3, u4 = u
-        return PolarAccelerations(u1, u2, u3, u4)
+        return PolarAccelerations.accelerations(u1, u2, u3, u4)
 
     @staticmethod
-    def transmission_matrix(u0, h=0.01, epsilon=1e-6):
+    def transition_matrix(u0, h=0.01, epsilon=1e-6):
+        u0 = np.asarray(u0).flatten()  # Ensure 1D
         n = len(u0)
         M = np.zeros((n, n))
 
         # Integrate base trajectory
         sol_base = solve_ivp(Integrator.ode_system, (0, h), u0, method='RK45', t_eval=[h])
-        u_base = sol_base.y[:, -1]
+        u_base = np.array(sol_base.y)[:, -1]
 
         for i in range(n):
             u_perturbed = u0.copy()
@@ -36,7 +40,6 @@ class Integrator:
             sol_perturbed = solve_ivp(Integrator.ode_system, (0, h), u_perturbed, method='RK45', t_eval=[h])
             u_i = sol_perturbed.y[:, -1]
 
-            # Finite difference column
             M[:, i] = (u_i - u_base) / epsilon
 
         return M

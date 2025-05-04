@@ -41,8 +41,8 @@ class ExtendedKalmanFilter:
         self.x = self.integrator.step(self.f, self.x, dt)
 
         # 2: linearisation and transition matrix
-        F_cont = self.jac(self.x)
-        F_disc = self.integrator.transition_matrix(F_cont, dt)
+        # F_cont = self.jac(self.x)
+        F_disc = self.integrator.transition_matrix(self.x, dt)
 
         # 3: covariance propagation
         self.P = F_disc @ self.P @ F_disc.T + self.Q
