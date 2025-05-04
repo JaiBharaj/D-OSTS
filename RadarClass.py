@@ -1,8 +1,8 @@
 class Radar:
-    def __init__(self, ID, visibility_angle, location):
+    def __init__(self, ID, location):
         self.__ID = ID
-        self.__location = location
-        self.__visibility_angle = visibility_angle
+        self.__location = np.array(location)
+        self.__visibility_angle = np.pi/2 # 80-90 degrees
         self.__sigma_0 = 10 # baseline error typically 10-50m
         self.__k = 0.02 # scaling factor typically 0.01-0.05 m/km
         self.satellite_measurements = {'time': [], 'visibility': [], 'r': [], 'theta': []}
@@ -18,13 +18,30 @@ class Radar:
     # method to get visibility angle
     def get_visibility_angle(self):
         return self.__visibility_angle
+    
+    @staticmethod
+    def polar_to_cartesian(position):
+        r, theta = position
+        x = r*np.cos(theta%(2*np.pi))
+        y = r*np.sin(theta%(2*np.pi))
+        return np.array([x,y])
+    
+    # method to check whether satellite is visible by a radar station
+    def check_visibility(self,satellite_position):
+        cart_rad = self.polar_to_cartesian(self.__location)
+        cart_sat = self.polar_to_cartesian(satellite_position)
+        rad_to_sat = (cart_sat - cart_rad) # vector from radar station to satellite
+        rad_to_sat /= np.linalg.norm(rad_to_sat) # normalise the vector
+        rad_normal = cart_rad/np.linalg.norm(cart_rad) # normalise radar station vector
+        cos_angle_difference = np.dot(rad_to_sat, rad_normal) #cosine of angle between radar and satellite
+        return cos_angle_difference >= np.cos(self.__visibility_angle)
         
     # method to record satellites position at a time, if not visible then position recorded as 0,0
     def record_satellite(self, time, satellite_position):
         r, theta = satellite_position
         theta = theta%(2*np.pi)
         # check if satellite is visible by radar station
-        visible = np.abs(theta - self.__location[1]) <= self.__visibility_angle
+        visible = self.check_visibility(satellite_position)
         if not visible:
             r,theta = np.nan, np.nan
         self.satellite_measurements['time'].append(time)
