@@ -1,3 +1,6 @@
+import numpy as np
+from CrudeInitialConditions import InitialConditions
+from CoordinateTransformations import PolarAccelerations
 from scipy.integrate import solve_ivp
 
 class Integrator:

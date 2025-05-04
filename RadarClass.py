@@ -1,3 +1,5 @@
+import numpy as np
+
 class Radar:
     def __init__(self, ID, visibility_angle, location):
         self.__ID = ID

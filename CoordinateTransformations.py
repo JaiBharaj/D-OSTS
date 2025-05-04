@@ -1,3 +1,9 @@
+import numpy as np
+import Atmospheric_Density
+from CrudeInitialConditions import InitialConditions
+
+atmospheric_density = Atmospheric_Density.atmos_ussa1976_rho()
+
 class PolarAccelerations:
 
     # Polar Velocity Magnitude
