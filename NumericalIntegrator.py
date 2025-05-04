@@ -42,6 +42,10 @@ class Integrator:
         return M
 
     @staticmethod
+    def step(f, x, dt):
+        return x + dt * f(x)
+
+    @staticmethod
     def rhs_polar(t, y):
         r, r_dot, theta, theta_dot = y
         return PolarAccelerations.accelerations(r, r_dot, theta, theta_dot)
