@@ -3,8 +3,8 @@ from CrudeInitialConditions import InitialConditions
 import Atmospheric_Density
 import NumericalIntegrator
 import RadarClass
-import ExtendedKalmanFilters
-import Visualiser
+from ExtendedKalmanFilters import ExtendedKalmanFilter, compute_F_analytic
+from Visualiser import Visualiser2D
 
 ########## GENERATING TRUE TRAJECTORY ##########
 NumericalIntegrator.Integrator.initialize(mu_value=InitialConditions.gravConstant * InitialConditions.earthMass)
