@@ -1,8 +1,4 @@
-import numpy as np
 from scipy.integrate import solve_ivp
-from CoordinateTransformations import PolarAccelerations
-from CrudeInitialConditions import InitialConditions
-
 
 class Integrator:
     Re = InitialConditions.earthRadius

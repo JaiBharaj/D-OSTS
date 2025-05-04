@@ -1,16 +1,3 @@
-import time
-import numpy as np
-import matplotlib
-matplotlib.use('TkAgg')
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-from matplotlib.patches import Polygon
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection
-from CrudeInitialConditions import InitialConditions
-import threading
-from queue import Queue, Empty
-from collections import deque
-
 class Visualiser2D:
     def __init__(self, trajectory_file_path, prediction_file_path, break_point=0):
         # Initialise parameters

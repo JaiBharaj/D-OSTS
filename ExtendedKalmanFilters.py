@@ -1,5 +1,3 @@
-import numpy as np
-
 class ExtendedKalmanFilter:
     """
     Extended Kalman Filter with pluggable numerical integrator.

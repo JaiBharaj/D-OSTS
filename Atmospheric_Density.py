@@ -1,5 +1,5 @@
 import ussa1976
-import numpy as np
+
 ds = ussa1976.compute()
 
 def atmos_ussa1976_rho(altitude, ds):

@@ -1,7 +1,3 @@
-import numpy as np
-from CrudeInitialConditions import InitialConditions
-from Atmospheric_Density import atmospheric_density
-
 class PolarAccelerations:
 
     # Polar Velocity Magnitude
