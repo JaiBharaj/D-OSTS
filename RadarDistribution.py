@@ -2,8 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def distribute_radars2D(Hdark, R_earth):
-    visibility_angle = np.arccos(R_earth/(R_earth + Hdark))
-    num_stations = int(np.ceil(np.pi/visibility_angle))
+    distribution_angle = np.arccos(R_earth/(R_earth + Hdark))
+    num_stations = int(np.ceil(np.pi/distribution_angle))
     interval_points = np.linspace(0, 2 * np.pi, num_stations, endpoint=False)
     radar_coors = np.column_stack((np.full(num_stations,R_earth), interval_points))
     return radar_coors
