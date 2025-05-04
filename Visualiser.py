@@ -93,10 +93,11 @@ class Visualiser2D:
                 line = f.readline()
                 if not line:
                     f.seek(pos)
-                    #time.sleep(0.005)
                     continue
                 try:
-                    x, y = map(float, line.strip().split())
+                    _, r, theta = map(float, line.strip().split())
+                    x = r * np.cos(theta)
+                    y = r * np.sin(theta)
                     yield x, y
                 except ValueError:
                     continue
@@ -108,13 +109,14 @@ class Visualiser2D:
                 line = f.readline()
                 if not line:
                     f.seek(pos)
-                    #time.sleep(0.0001)
                     continue
                 try:
-                    parts = line.strip().split()
-                    if len(parts) == 5:
-                        x, y, std_x, std_y, is_meas = map(float, parts)
-                        yield x, y, std_x, std_y, int(is_meas)
+                    _, r, theta, dr, dtheta, is_meas = map(float, line.strip().split())
+                    x = r * np.cos(theta)
+                    y = r * np.sin(theta)
+                    std_x = np.sqrt((dr * np.cos(theta)) ** 2 + (r * dtheta * np.sin(theta)) ** 2)
+                    std_y = np.sqrt((dr * np.sin(theta)) ** 2 + (r * dtheta * np.cos(theta)) ** 2)
+                    yield x, y, std_x, std_y, int(is_meas)
                 except ValueError:
                     continue
 
