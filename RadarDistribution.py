@@ -25,20 +25,17 @@ def distribute_radars3D(H, R=6371):
     return np.column_stack((np.full(num_stations,R), theta, phi))
 
 # optional plotting
-def plot2D(rs):
-  R=6371
-  r, theta = rs.T
-  x = r * np.cos(theta)
-  y = r * np.sin(theta)
-  circle_theta = np.linspace(0, 2 * np.pi, 200)
-  circle_x = R * np.cos(circle_theta)
-  circle_y = R * np.sin(circle_theta)
-  
-  fig = plt.figure(figsize=(8,8))
-  
-  plt.plot(circle_x,circle_y)
-  plt.scatter(x,y, color='r', s=60)
-  plt.show()
+def plot_2D(ax, rs, R=6371):
+    r, theta = rs.T
+    x = r * np.cos(theta)
+    y = r * np.sin(theta)
+    circle_theta = np.linspace(0, 2 * np.pi, 200)
+    circle_x = R * np.cos(circle_theta)
+    circle_y = R * np.sin(circle_theta)
+    
+    colors = ['r']+['g']*(len(rs)-1)
+    ax.plot(circle_x,circle_y)
+    ax.scatter(x,y, color=colors, s=60)
 
 def plot3D(rs, interactive=False):
   R=6371
