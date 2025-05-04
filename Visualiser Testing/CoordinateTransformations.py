@@ -12,7 +12,7 @@ class PolarAccelerations:
     # First part of Drag term: consistent for Spherical coordinates
     @staticmethod
     def drag_start(C_d, A, m, r):
-        Re = InitialConditions.earthRadius
+        Re = 6371e3
         h = r - Re
         result = 0.5 * atmospheric_density(h) * C_d * A / m
         return result
