@@ -9,4 +9,4 @@ def atmos_ussa1976_rho(altitude, ds):
     # Return pressure, temperature, and density
     return ds["rho"].values[idx]
 
-print(atmos_ussa1976_rho(1000, ds))
+# print(atmos_ussa1976_rho(1000, ds))
