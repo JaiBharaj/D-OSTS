@@ -1,11 +1,29 @@
 import numpy as np
 from CrudeInitialConditions import InitialConditions
-import Atmospheric_Density
+from Atmospheric_Density import atmos_ussa1976_rho
 import RadarClass
 from CoordinateTransformations import PolarAccelerations
 from NumericalIntegrator import Integrator
 from ExtendedKalmanFilters import ExtendedKalmanFilter, compute_F_analytic
 from Visualiser import Visualiser2D
+from IntegratorWrapper import IntegratorWrapper
+from scipy.integrate import solve_ivp
+from scipy.linalg import expm
+
+
+class RK45Integrator:
+    def step(self, f, x, dt):
+        sol = solve_ivp(lambda t,y: f(y),
+                        (0, dt), x,
+                        rtol=1e-6, atol=1e-9,
+                        max_step=dt/10)
+        return sol.y[:, -1]
+
+    def transition_matrix(self, x, dt):
+        # continuous Jacobian at x (n×n)
+        F_cont = compute_F_analytic(x, CD, A, m, GM, atmos_ussa1976_rho)
+        # discrete transition matrix via matrix exponential
+        return expm(F_cont * dt)
 
 ########## GENERATING TRUE TRAJECTORY ##########
 Integrator.initialize(mu_value=InitialConditions.gravConstant * InitialConditions.earthMass)
@@ -21,7 +39,7 @@ input_path = "trajectory_without_noise.txt"                                 ##
 output_path = "fake_radar_data.txt"                                         ##
 with open(input_path, 'r') as infile, open(output_path, 'w') as outfile:    ##
     for i, line in enumerate(infile):                                       ##
-        if i % 100 == 0:                                                    ##
+        if i % 10 == 0:                                                    ##
             outfile.write(line)                                             ##
 ##############################################################################
 
@@ -72,6 +90,9 @@ f_jacobian = lambda x: compute_F_analytic(
     lambda r: Atmospheric_Density.atmos_ussa1976_rho(r - InitialConditions.earthRadius)
 )
 
+f_dynamics = lambda x: PolarAccelerations.accelerations(x[0], x[1], x[2], x[3])
+
+
 x0 = np.array([Integrator.r0, 0.0, 0.0, np.sqrt(GM / Integrator.r0) / Integrator.r0])
 
 # Load radar data
@@ -80,15 +101,16 @@ times = data[:, 0]
 measurements = data[:, 1:3]
 
 ekf = ExtendedKalmanFilter(
-    f_dynamics=lambda x: PolarAccelerations.accelerations(x[0], x[1], x[2], x[3]),
+    f_dynamics=f_dynamics,
     f_jacobian=f_jacobian,
     H=H,
     Q=Q,
     R=R,
     x0=x0,
     P0=P0,
-    integrator=Integrator
+    integrator=RK45Integrator()
 )
+
 
 input_file = input_path
 output_file = "ekf_predicted_trajectory.txt"
@@ -103,24 +125,25 @@ P = P0.copy()
 
 for i in range(len(measurement_times)):
     t = measurement_times[i]
-    z = measurements[i]  # `None` if no measurement at this time
+    z = measurements[i]
 
-    dt = t - times[-1] if times else t  # Use full time if first step
+    if i == 0:
+        dt = 1e-3  # Small nonzero dt for first Jacobian estimate
+    else:
+        dt = t - measurement_times[i - 1]
 
-    # Predict
     x, P = ekf.predict(dt)
-    is_measured = False
 
-    # Update if measurement is available
-    if z is not None:
+    is_measured = False
+    if not np.isnan(z).any():
         x, P = ekf.update(z)
         is_measured = True
 
-    # Record everything
     times.append(t)
     states.append(x.copy())
     covariances.append(P.copy())
     is_measured_flags.append(is_measured)
+
 
 # Save to file
 with open(output_file, 'w') as f:
@@ -130,6 +153,7 @@ with open(output_file, 'w') as f:
         r_uncertainty = np.sqrt(P[0, 0])
         theta_uncertainty = np.sqrt(P[2, 2])
         f.write(f"{t:.6f} {r:.6f} {theta:.8f} {r_uncertainty:.6f} {theta_uncertainty:.8f} {measured}\n")
+
 
 vis = Visualiser2D(input_file, output_file)
 vis.visualise()
