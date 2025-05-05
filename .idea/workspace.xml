@@ -98,7 +98,8 @@
       <workItem from="1746365165453" duration="5931000" />
       <workItem from="1746381906721" duration="2493000" />
       <workItem from="1746472071075" duration="4200000" />
-      <workItem from="1746478060593" duration="1839000" />
+      <workItem from="1746478060593" duration="2077000" />
+      <workItem from="1746480710720" duration="505000" />
     </task>
     <task id="LOCAL-00001" summary="Moved to seperate folder to keep neat when testing">
       <option name="closed" value="true" />
@@ -171,7 +172,7 @@
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/RHESSI$FakeTrajectoryGenerator.coverage" NAME="FakeTrajectoryGenerator Coverage Results" MODIFIED="1746361600737" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Visualiser Testing" />
     <SUITE FILE_PATH="coverage/RHESSI$FakeTrajectoryGenerator3D.coverage" NAME="FakeTrajectoryGenerator3D Coverage Results" MODIFIED="1746362986636" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Visualiser Testing" />
-    <SUITE FILE_PATH="coverage/RHESSI$BaselineSolution.coverage" NAME="BaselineSolution Coverage Results" MODIFIED="1746479811949" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/RHESSI$BaselineSolution.coverage" NAME="BaselineSolution Coverage Results" MODIFIED="1746480891087" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/RHESSI$Visualiser.coverage" NAME="Visualiser Coverage Results" MODIFIED="1746363055583" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Visualiser Testing" />
   </component>
 </project>

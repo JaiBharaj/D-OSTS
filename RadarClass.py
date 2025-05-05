@@ -10,7 +10,7 @@ class Radar:
         self.__k = k  # scaling factor typically 0.01-0.05 m/km
         self.satellite_measurements = {'time': [], 'visibility': [], 'r': [], 'theta': []}
         self.__last_recorded_time = None
-        self.__measurement_interval = 100.0  # seconds
+        self.__measurement_interval = 1000.0  # seconds
 
     # method to get ID
     def get_ID(self):
