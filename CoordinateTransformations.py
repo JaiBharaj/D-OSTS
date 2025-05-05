@@ -65,8 +65,9 @@ class SphericalAccelerations(PolarAccelerations):
         '''
 
         dt_start = SphericalAccelerations.drag_start(C_d=InitialConditions.dragCoeff,
-                                                 A=InitialConditions.crossSec,
-                                                 m=InitialConditions.satMass)
+                                                     A=InitialConditions.crossSec,
+                                                     m=InitialConditions.satMass,
+                                                     r=u1)
 
         vel_mag = SphericalAccelerations.comb_velocity(u1, u2, u3, u4, u6)
 
