@@ -18,7 +18,7 @@ Integrator.get_trajectory()
 input_path = "trajectory_without_noise.txt"
 output_path = "noisy_radar_data.txt"
 
-H_dark = 100000  # Radar altitude (m)
+H_dark = 100000  # Radar min altitude (m)
 radar_positions = distribute_radars2D(H_dark, InitialConditions.earthRadius)
 radars = []
 

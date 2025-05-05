@@ -9,6 +9,8 @@ class Radar:
         self.__min_sigma = 1.0  # ensures noise doesn't get unrealistically small
         self.__k = k  # scaling factor typically 0.01-0.05 m/km
         self.satellite_measurements = {'time': [], 'visibility': [], 'r': [], 'theta': []}
+        self.__last_recorded_time = None
+        self.__measurement_interval = 25.0  # seconds
 
     # method to get ID
     def get_ID(self):
@@ -54,12 +56,24 @@ class Radar:
 
     # method to record satellites position at a time, if not visible then position recorded as 0,0
     def record_satellite(self, time, satellite_position):
+        if self.__last_recorded_time is not None:
+            if time - self.__last_recorded_time < self.__measurement_interval:
+                # Still pad with NaNs to keep alignment
+                self.satellite_measurements['time'].append(time)
+                self.satellite_measurements['visibility'].append(False)
+                self.satellite_measurements['r'].append(np.nan)
+                self.satellite_measurements['theta'].append(np.nan)
+                return
+
         r, theta = satellite_position
         theta = theta % (2 * np.pi)
-        # check if satellite is visible by radar station
         visible = self.check_visibility(satellite_position)
+
         if not visible:
             r, theta = np.nan, np.nan
+        else:
+            self.__last_recorded_time = time
+
         self.satellite_measurements['time'].append(time)
         self.satellite_measurements['visibility'].append(visible)
         self.satellite_measurements['r'].append(r)
