@@ -1,7 +1,7 @@
 import numpy as np
 
 class Radar:
-    def __init__(self, ID, location, sigma=10, k=0.02):
+    def __init__(self, ID, location, sigma=50, k=0.05):
         self.__ID = ID
         self.__location = np.array(location)
         self.__visibility_angle = np.pi / 2  # 80-90 degrees
@@ -10,7 +10,7 @@ class Radar:
         self.__k = k  # scaling factor typically 0.01-0.05 m/km
         self.satellite_measurements = {'time': [], 'visibility': [], 'r': [], 'theta': []}
         self.__last_recorded_time = None
-        self.__measurement_interval = 25.0  # seconds
+        self.__measurement_interval = 100.0  # seconds
 
     # method to get ID
     def get_ID(self):

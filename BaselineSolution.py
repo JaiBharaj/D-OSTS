@@ -77,7 +77,7 @@ Q = np.zeros((4, 4))
 
 # Initial uncertainty
 P0 = np.diag([
-    10.0**2,        # r
+    50.0**2,        # r
     1.0**2,         # vr
     (1e-4)**2,      # theta
     (1e-4)**2       # omega
