@@ -139,17 +139,22 @@ P = P0.copy()
 
 for i in range(len(measurement_times)):
     t = measurement_times[i]
-    z = measurements[i]
+    r, theta, sigma_r, sigma_theta = measurements[i]
 
     if i == 0:
         dt = 1e-3  # Small nonzero dt for first Jacobian estimate
     else:
         dt = t - measurement_times[i - 1]
 
-    x, P = ekf.predict(dt)
+    z = np.array([r, theta])
 
-    is_measured = False
-    if not np.isnan(z).any():
+    if np.isnan(z).any():
+        x, P = ekf.predict(dt)
+        is_measured = False
+    else:
+        # Update R dynamically based on per-step measurement uncertainty
+        ekf.R = np.diag([sigma_r**2, sigma_theta**2])
+        x, P = ekf.predict(dt)
         x, P = ekf.update(z)
         is_measured = True
 
@@ -157,7 +162,6 @@ for i in range(len(measurement_times)):
     states.append(x.copy())
     covariances.append(P.copy())
     is_measured_flags.append(is_measured)
-
 
 # Save to file
 with open(output_file, 'w') as f:
