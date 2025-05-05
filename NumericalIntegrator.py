@@ -1,21 +1,21 @@
 import numpy as np
 from CrudeInitialConditions import InitialConditions
-from CoordinateTransformations import PolarAccelerations
+from CoordinateTransformations import PolarAccelerations, SphericalAccelerations
 from scipy.integrate import solve_ivp
 
 class Integrator:
-    Re = InitialConditions.earthRadius
-    alt0 = InitialConditions.initSatAlt
-    r0 = Re + alt0
-    theta0 = 0.0
-    r_dot0 = 0.0
-    mu = None
 
-    @staticmethod
-    def initialize(mu_value):
-        Integrator.mu = mu_value
+    def __init__(self):
+        self.Re = InitialConditions.earthRadius
+        self.alt0 = InitialConditions.initSatAlt
+        self.r0 = self.Re + self.alt0
+        self.theta0 = InitialConditions.initSatTheta
+        self.phi0 = InitialConditions.initSatPhi
+        self.lam0 = InitialConditions.initSatLam
+        self.r_dot0 = InitialConditions.initSatRdot
+        self.phi_dot0 = InitialConditions.initSatPhidot
+        self.mu = InitialConditions.gravConstant * InitialConditions.earthMass
 
-    @staticmethod
     def ode_system(t, u):
         u = np.asarray(u).flatten()
         if len(u) != 4:
@@ -23,28 +23,26 @@ class Integrator:
         u1, u2, u3, u4 = u
         return PolarAccelerations.accelerations(u1, u2, u3, u4)
 
-    @staticmethod
-    def transition_matrix(u0, h=0.01, epsilon=1e-6):
+    def transition_matrix(self, u0, h=0.01, epsilon=1e-6):
         u0 = np.asarray(u0).flatten()  # Ensure 1D
         n = len(u0)
         M = np.zeros((n, n))
 
         # Integrate base trajectory
-        sol_base = solve_ivp(Integrator.ode_system, (0, h), u0, method='RK45', t_eval=[h])
+        sol_base = solve_ivp(self.ode_system, (0, h), u0, method='RK45', t_eval=[h])
         u_base = np.array(sol_base.y)[:, -1]
 
         for i in range(n):
             u_perturbed = u0.copy()
             u_perturbed[i] += epsilon
 
-            sol_perturbed = solve_ivp(Integrator.ode_system, (0, h), u_perturbed, method='RK45', t_eval=[h])
+            sol_perturbed = solve_ivp(self.ode_system, (0, h), u_perturbed, method='RK45', t_eval=[h])
             u_i = sol_perturbed.y[:, -1]
 
             M[:, i] = (u_i - u_base) / epsilon
 
         return M
 
-    @staticmethod
     def step(f, x, dt):
         return x + dt * f(x)
 
@@ -54,23 +52,27 @@ class Integrator:
         return PolarAccelerations.accelerations(r, r_dot, theta, theta_dot)
 
     @staticmethod
-    def hit_ground():
+    def rhs_spherical(t, y):
+        r, r_dot, phi, phi_dot, lam, lam_dot = y
+        return SphericalAccelerations.accelerations(
+            r, r_dot, phi, phi_dot, lam, lam_dot)
+    
+    def hit_ground(self):
         def events(t, y):
-            return y[0] - Integrator.Re
+            return y[0] - self.Re
 
         events.terminal = True
         events.direction = -1
         return events
 
-    @staticmethod
-    def runge_kutta45_2d():
-        v0 = np.sqrt(Integrator.mu / Integrator.r0)
-        theta_dot0 = (v0 - 80) / Integrator.r0
+    def runge_kutta45_2d(self):
+        v0 = np.sqrt(self.mu / self.r0)
+        theta_dot0 = (v0 - 80) / self.r0
 
         y0 = np.array([
-            Integrator.r0,
-            Integrator.r_dot0,
-            Integrator.theta0,
+            self.r0,
+            self.r_dot0,
+            self.theta0,
             theta_dot0], dtype=float)
 
         sol = solve_ivp(
@@ -82,19 +84,47 @@ class Integrator:
             method="RK45",
             first_step=1.0,
             max_step=5.0,
-            events=Integrator.hit_ground())
+            events=self.hit_ground())
+
+        return sol
+    
+    def runge_kutta45_3d(self):
+        v_circ = np.sqrt(self.mu / self.r0)
+        v_target = v_circ - 80.0
+        term_sq  = v_target**2 - (self.r0 * self.phi_dot0)**2
+        if term_sq < 0:
+            raise ValueError("phi_dot0 too large for given Δv or orbit height")
+        lam_dot0 = - np.sqrt(term_sq) / (self.r0 * np.sin(self.phi0)) 
+
+        y0 = np.array([
+            self.r0,      # r
+            self.r_dot0,  # ṙ
+            self.phi0,    # φ
+            self.phi_dot0,# φ̇
+            self.lam0,    # λ
+            lam_dot0            # λ̇
+        ], dtype=float)
+
+        sol = solve_ivp(
+            Integrator.rhs_spherical,
+            (0.0, 1.3e8),
+            y0,
+            method="RK45",
+            rtol=1e-7, 
+            atol=1e-9,
+            first_step=1.0, 
+            max_step=2.0,
+            events=self.hit_ground())
 
         return sol
 
-    @staticmethod
     def downsample_indices(n_total, n_target):
         if n_target >= n_total:
             return np.arange(n_total)
         return np.linspace(0, n_total - 1, n_target, dtype=int)
 
-    @staticmethod
-    def get_trajectory(n_save=20_000):
-        res = Integrator.runge_kutta45_2d()
+    def get_trajectory(self, n_save=20_000):
+        res = self.runge_kutta45_2d()
         print(res.t_events[0])
 
         t_arr = res.t
@@ -102,7 +132,7 @@ class Integrator:
         th_arr = res.y[2]
 
         # -------- Optional ----------
-        # keep = Integrator.downsample_indices(len(t_arr), n_save)
+        # keep = self.downsample_indices(len(t_arr), n_save)
         # t_arr, r_arr, th_arr = t_arr[keep], r_arr[keep], th_arr[keep]
 
         # -------- File output ----------
@@ -112,12 +142,40 @@ class Integrator:
             for (t, r, th) in zip(t_arr, r_arr, th_arr):
                 f_true.write(f"{t} {r} {th}\n")
 
+    def get_trajectory_3d(self, n_save=20_000, to_xyz=False):
+        res = self.runge_kutta45_3d()
+        t_arr  = res.t
+        r_arr  = res.y[0]
+        phi_arr = res.y[2]
+        lam_arr = res.y[4]
+
+        # keep = self.downsample_indices(len(t_arr), n_save)
+        # t_arr, r_arr, phi_arr, lam_arr = t_arr[keep], r_arr[keep], phi_arr[keep], lam_arr[keep]
+
+        fname = 'trajectory_3d_xyz.txt' if to_xyz else 'trajectory_3d_spherical.txt'
+        # with open(fname, 'w') as f, open('trajectory_3d_xyz_pred.txt', 'w') as f_pred:
+        with open(fname, 'w') as f:
+            if to_xyz:
+                x = r_arr * np.sin(phi_arr) * np.cos(lam_arr)
+                y = r_arr * np.sin(phi_arr) * np.sin(lam_arr)
+                z = r_arr * np.cos(phi_arr)
+                for t, xi, yi, zi in zip(t_arr, x, y, z):
+                    f.write(f"{t:.3f} {xi:.3f} {yi:.3f} {zi:.3f}\n")
+                    # f.write(f"{xi:.3f} {yi:.3f} {zi:.3f}\n")
+                    # f_pred.write(f"{0} {0} {0} {0} {0} {0} {0}\n")
+            else:
+                for t, r, ph, la in zip(t_arr, r_arr, phi_arr, lam_arr):
+                    f.write(f"{t:.3f} {r:.3f} {ph:.6f} {la:.6f}\n")
+
+        print(f"Wrote {len(t_arr)} points to {fname}")
+
+
 # ------ An example to use this class ------
 
 # from NumericalIntegrator import Integrator
 # from CrudeInitialConditions import InitialConditions
 
-# Integrator.initialize(mu_value=InitialConditions.gravConstant * InitialConditions.earthMass)
-# Integrator.get_trajectory()
+# integrator = Integrator()
+# integrator.get_trajectory_3d()
 
-# ------ Then you will get a text file named 'trajectory_without_noise' in same path ------
+# ------ Then you will get a text file named 'trajectory_3d_spherical.txt' in same path ------
