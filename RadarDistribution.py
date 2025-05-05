@@ -1,6 +1,6 @@
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
-
 
 def distribute_radars2D(Hdark, R_earth):
     distribution_angle = np.arccos(R_earth / (R_earth + Hdark))

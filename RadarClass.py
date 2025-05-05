@@ -1,3 +1,5 @@
+import numpy as np
+
 class Radar:
     def __init__(self, ID, location):
         self.__ID = ID
