@@ -1,5 +1,6 @@
 import numpy as np
 from CrudeInitialConditions import InitialConditions
+import Atmospheric_Density
 from Atmospheric_Density import atmos_ussa1976_rho
 import RadarClass
 from CoordinateTransformations import PolarAccelerations
@@ -9,7 +10,6 @@ from Visualiser import Visualiser2D
 from PredictorIntegrator import RK45Integrator
 from scipy.integrate import solve_ivp
 from scipy.linalg import expm
-
 
 ########## GENERATING TRUE TRAJECTORY ##########
 Integrator.initialize(mu_value=InitialConditions.gravConstant * InitialConditions.earthMass)
@@ -86,6 +86,8 @@ data = np.loadtxt(output_path)
 times = data[:, 0]
 measurements = data[:, 1:3]
 
+rho_func = lambda r: atmos_ussa1976_rho(r - InitialConditions.earthRadius)
+
 ekf = ExtendedKalmanFilter(
     f_dynamics=f_dynamics,
     f_jacobian=f_jacobian,
@@ -94,9 +96,8 @@ ekf = ExtendedKalmanFilter(
     R=R,
     x0=x0,
     P0=P0,
-    integrator=RK45Integrator()
+    integrator=RK45Integrator(CD, A, m, GM, rho_func)
 )
-
 
 input_file = input_path
 output_file = "ekf_predicted_trajectory.txt"
@@ -138,8 +139,7 @@ with open(output_file, 'w') as f:
         theta = x[2]
         r_uncertainty = np.sqrt(P[0, 0])
         theta_uncertainty = np.sqrt(P[2, 2])
-        f.write(f"{t:.6f} {r:.6f} {theta:.8f} {r_uncertainty:.6f} {theta_uncertainty:.8f} {measured}\n")
+        f.write(f"{t:.6f} {r:.6f} {theta:.8f} {r_uncertainty:.6f} {theta_uncertainty:.8f} {int(measured)}\n")
 
-
-vis = Visualiser2D(input_file, output_file)
+vis = Visualiser2D(input_file, output_file, mode='prewritten')
 vis.visualise()

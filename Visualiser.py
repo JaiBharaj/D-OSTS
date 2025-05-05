@@ -12,11 +12,12 @@ from queue import Queue, Empty
 from collections import deque
 
 class Visualiser2D:
-    def __init__(self, trajectory_file_path, prediction_file_path, break_point=0):
+    def __init__(self, trajectory_file_path, prediction_file_path, break_point=0, mode='prewritten'):
         # Initialise parameters
         self.earth_radius = InitialConditions.earthRadius
         self.stop_distance = self.earth_radius + break_point
         self.initial_altitude = InitialConditions.initSatAlt
+        self.mode = mode
 
         # File paths
         self.TRAJECTORY_FILE = trajectory_file_path
@@ -101,37 +102,63 @@ class Visualiser2D:
 
     def read_next_position(self):
         with open(self.TRAJECTORY_FILE, 'r') as f:
-            while True:
-                pos = f.tell()
-                line = f.readline()
-                if not line:
-                    f.seek(pos)
-                    continue
-                try:
-                    _, r, theta = map(float, line.strip().split())
-                    x = r * np.cos(theta)
-                    y = r * np.sin(theta)
-                    yield x, y
-                except ValueError:
-                    continue
+            if self.mode == 'prewritten':
+                for line in f:
+                    try:
+                        _, r, theta = map(float, line.strip().split())
+                        x = r * np.cos(theta)
+                        y = r * np.sin(theta)
+                        yield x, y
+                        # time.sleep(0.05)  # Simulate streaming delay
+                    except ValueError:
+                        continue
+            else:  # 'realtime'
+                while True:
+                    pos = f.tell()
+                    line = f.readline()
+                    if not line:
+                        f.seek(pos)
+                        # time.sleep(0.01)
+                        continue
+                    try:
+                        _, r, theta = map(float, line.strip().split())
+                        x = r * np.cos(theta)
+                        y = r * np.sin(theta)
+                        yield x, y
+                    except ValueError:
+                        continue
 
     def read_next_prediction(self):
         with open(self.PREDICTION_FILE, 'r') as f:
-            while True:
-                pos = f.tell()
-                line = f.readline()
-                if not line:
-                    f.seek(pos)
-                    continue
-                try:
-                    _, r, theta, dr, dtheta, is_meas = map(float, line.strip().split())
-                    x = r * np.cos(theta)
-                    y = r * np.sin(theta)
-                    std_x = np.sqrt((dr * np.cos(theta)) ** 2 + (r * dtheta * np.sin(theta)) ** 2)
-                    std_y = np.sqrt((dr * np.sin(theta)) ** 2 + (r * dtheta * np.cos(theta)) ** 2)
-                    yield x, y, std_x, std_y, int(is_meas)
-                except ValueError:
-                    continue
+            if self.mode == 'prewritten':
+                for line in f:
+                    try:
+                        _, r, theta, dr, dtheta, is_meas = map(float, line.strip().split())
+                        x = r * np.cos(theta)
+                        y = r * np.sin(theta)
+                        std_x = np.sqrt((dr * np.cos(theta)) ** 2 + (r * dtheta * np.sin(theta)) ** 2)
+                        std_y = np.sqrt((dr * np.sin(theta)) ** 2 + (r * dtheta * np.cos(theta)) ** 2)
+                        yield x, y, std_x, std_y, int(is_meas)
+                        # time.sleep(0.05)
+                    except ValueError:
+                        continue
+            else:  # realtime mode
+                while True:
+                    pos = f.tell()
+                    line = f.readline()
+                    if not line:
+                        f.seek(pos)
+                        # time.sleep(0.01)
+                        continue
+                    try:
+                        _, r, theta, dr, dtheta, is_meas = map(float, line.strip().split())
+                        x = r * np.cos(theta)
+                        y = r * np.sin(theta)
+                        std_x = np.sqrt((dr * np.cos(theta)) ** 2 + (r * dtheta * np.sin(theta)) ** 2)
+                        std_y = np.sqrt((dr * np.sin(theta)) ** 2 + (r * dtheta * np.cos(theta)) ** 2)
+                        yield x, y, std_x, std_y, int(is_meas)
+                    except ValueError:
+                        continue
 
     def load_data(self):
         pos_gen = self.read_next_position()
@@ -146,7 +173,7 @@ class Visualiser2D:
             time.sleep(0.00001)
 
     def update(self, frame):
-        MAX_STEPS = 500
+        MAX_STEPS = 50000
 
         artists = [self.trajectory_line_full, self.satellite_dot_full,
                    self.trajectory_line_zoom, self.satellite_dot_zoom,
