@@ -22,7 +22,7 @@ H_dark = 100000  # Radar altitude (m)
 radar_positions = distribute_radars2D(H_dark, InitialConditions.earthRadius)
 radars = []
 
-# Initialize radar stations
+# Initialise radar stations
 for i, (r_radar, theta_radar) in enumerate(radar_positions):
     radar = Radar(
         ID=f"Radar_{i}",
