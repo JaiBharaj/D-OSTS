@@ -139,22 +139,17 @@ P = P0.copy()
 
 for i in range(len(measurement_times)):
     t = measurement_times[i]
-    r, theta, sigma_r, sigma_theta = measurements[i]
+    z = measurements[i]
 
     if i == 0:
         dt = 1e-3  # Small nonzero dt for first Jacobian estimate
     else:
         dt = t - measurement_times[i - 1]
 
-    z = np.array([r, theta])
+    x, P = ekf.predict(dt)
 
-    if np.isnan(z).any():
-        x, P = ekf.predict(dt)
-        is_measured = False
-    else:
-        # Update R dynamically based on per-step measurement uncertainty
-        ekf.R = np.diag([sigma_r ** 2, sigma_theta ** 2])
-        x, P = ekf.predict(dt)
+    is_measured = False
+    if not np.isnan(z).any():
         x, P = ekf.update(z)
         is_measured = True
 
