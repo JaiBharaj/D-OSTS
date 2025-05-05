@@ -47,18 +47,6 @@ for radar in radars:
 noisy_traj = RadarCombineMeasurements.combine_radar_measurements(radars, true_traj)
 RadarCombineMeasurements.write_to_file(output_path, noisy_traj)
 
-'''
-################# GENERATING FAKE RADAR DATA FOR TESTING #####################
-############## DELETE AFTER REAL RADAR CODE IS INSERTED ABOVE ################
-input_path = "trajectory_without_noise.txt"                                 ##
-output_path = "fake_radar_data.txt"                                         ##
-with open(input_path, 'r') as infile, open(output_path, 'w') as outfile:    ##
-    for i, line in enumerate(infile):                                       ##
-        if i % 10 == 0:                                                     ##
-            outfile.write(line)                                             ##
-##############################################################################
-'''
-
 # Load radar data from the noisy radar measurements file
 measurement_times = []
 measurements = []
