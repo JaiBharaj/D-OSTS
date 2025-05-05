@@ -4,7 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="fe963f24-9a54-4832-9b6d-c0a8cc3c9355" name="Changes" comment="" />
+    <list default="true" id="fe963f24-9a54-4832-9b6d-c0a8cc3c9355" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/RadarCombineMeasurements.py" beforeDir="false" afterPath="$PROJECT_DIR$/RadarCombineMeasurements.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -48,24 +52,25 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;Python.BaselineSolution.executor&quot;: &quot;Run&quot;,
-    &quot;Python.FakeTrajectoryGenerator.executor&quot;: &quot;Run&quot;,
-    &quot;Python.FakeTrajectoryGenerator3D.executor&quot;: &quot;Run&quot;,
-    &quot;Python.Visualiser.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Python.BaselineSolution.executor": "Run",
+    "Python.FakeTrajectoryGenerator.executor": "Run",
+    "Python.FakeTrajectoryGenerator3D.executor": "Run",
+    "Python.Visualiser.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "Development",
+    "ignore.virus.scanning.warn.message": "true",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\Jaigovind Bharaj\PycharmProjects\RHESSI\Visualiser Testing" />
@@ -81,7 +86,7 @@
   </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="74a56dfa-728b-4061-b11d-53c1ac848b17" name="Changes" comment="" />
+      <changelist id="fe963f24-9a54-4832-9b6d-c0a8cc3c9355" name="Changes" comment="" />
       <created>1746281331512</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
@@ -90,6 +95,7 @@
       <workItem from="1746358092378" duration="6889000" />
       <workItem from="1746365165453" duration="5931000" />
       <workItem from="1746381906721" duration="2493000" />
+      <workItem from="1746472071075" duration="347000" />
     </task>
     <task id="LOCAL-00001" summary="Moved to seperate folder to keep neat when testing">
       <option name="closed" value="true" />
@@ -162,7 +168,7 @@
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/RHESSI$FakeTrajectoryGenerator.coverage" NAME="FakeTrajectoryGenerator Coverage Results" MODIFIED="1746361600737" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Visualiser Testing" />
     <SUITE FILE_PATH="coverage/RHESSI$FakeTrajectoryGenerator3D.coverage" NAME="FakeTrajectoryGenerator3D Coverage Results" MODIFIED="1746362986636" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Visualiser Testing" />
-    <SUITE FILE_PATH="coverage/RHESSI$BaselineSolution.coverage" NAME="BaselineSolution Coverage Results" MODIFIED="1746463599918" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/RHESSI$BaselineSolution.coverage" NAME="BaselineSolution Coverage Results" MODIFIED="1746464844669" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/RHESSI$Visualiser.coverage" NAME="Visualiser Coverage Results" MODIFIED="1746363055583" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Visualiser Testing" />
   </component>
 </project>
