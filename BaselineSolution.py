@@ -1,35 +1,65 @@
 import numpy as np
 from CrudeInitialConditions import InitialConditions
-import Atmospheric_Density
+import RadarCombineMeasurements
 from Atmospheric_Density import atmos_ussa1976_rho
-import RadarClass
+from RadarClass import Radar
+from RadarDistribution import distribute_radars2D
 from CoordinateTransformations import PolarAccelerations
 from NumericalIntegrator import Integrator
 from ExtendedKalmanFilters import ExtendedKalmanFilter, compute_F_analytic
 from Visualiser import Visualiser2D
 from PredictorIntegrator import RK45Integrator
-from scipy.integrate import solve_ivp
-from scipy.linalg import expm
 
 ########## GENERATING TRUE TRAJECTORY ##########
 Integrator.initialize(mu_value=InitialConditions.gravConstant * InitialConditions.earthMass)
 Integrator.get_trajectory()
 
-########## RADAR CODE GOES HERE ##########
-# ---- ---- ---- ---- ---- ---- ---- ----
-#   ---- ---- ---- ---- ---- ---- ---- ---
+########## RADAR STATION NOISY MEASUREMENTS ##########
+input_path = "trajectory_without_noise.txt"
+output_path = "noisy_radar_data.txt"
 
+H_dark = 100000  # Radar altitude (m)
+radar_positions = distribute_radars2D(H_dark, InitialConditions.earthRadius)
+radars = []
+
+# Initialize radar stations
+for i, (r_radar, theta_radar) in enumerate(radar_positions):
+    radar = Radar(
+        ID=f"Radar_{i}",
+        location=[r_radar, theta_radar],
+    )
+    radars.append(radar)
+
+# Load true trajectory
+true_traj = np.loadtxt(input_path)  # Columns: time, r, theta
+
+# Record satellite positions in each radar
+for time, r, theta in true_traj:
+    sat_pos = [r, theta]
+    for radar in radars:
+        radar.record_satellite(time, sat_pos)
+
+# Add measurement noise
+for radar in radars:
+    radar.add_noise()
+
+# Combine measurements from all radars
+noisy_traj = RadarCombineMeasurements.combine_radar_measurements(radars, true_traj)
+RadarCombineMeasurements.write_to_file(output_path, noisy_traj)
+
+'''
 ################# GENERATING FAKE RADAR DATA FOR TESTING #####################
 ############## DELETE AFTER REAL RADAR CODE IS INSERTED ABOVE ################
 input_path = "trajectory_without_noise.txt"                                 ##
 output_path = "fake_radar_data.txt"                                         ##
 with open(input_path, 'r') as infile, open(output_path, 'w') as outfile:    ##
     for i, line in enumerate(infile):                                       ##
-        if i % 10 == 0:                                                    ##
+        if i % 10 == 0:                                                     ##
             outfile.write(line)                                             ##
 ##############################################################################
+'''
 
-# Load radar data from the fake radar file
+# Load radar data from the noisy radar measurements file
 measurement_times = []
 measurements = []
 
@@ -43,7 +73,6 @@ with open(output_path, 'r') as f:
         measurements.append(np.array([r, theta]))
 
 ########## TRAJECTORY PREDICTIONS WITH EXTENDED KALMAN FILTER ##########
-
 # Measurement model
 H = np.array([
     [1, 0, 0, 0],
@@ -71,22 +100,20 @@ A = InitialConditions.crossSec
 m = InitialConditions.satMass
 GM = InitialConditions.gravConstant * InitialConditions.earthMass
 
+rho_func = lambda r: atmos_ussa1976_rho(r - InitialConditions.earthRadius)
+
 f_jacobian = lambda x: compute_F_analytic(
     x, CD, A, m, GM,
-    lambda r: Atmospheric_Density.atmos_ussa1976_rho(r - InitialConditions.earthRadius)
+    rho_func=rho_func
 )
 
 f_dynamics = lambda x: PolarAccelerations.accelerations(x[0], x[1], x[2], x[3])
-
-
 x0 = np.array([Integrator.r0, 0.0, 0.0, np.sqrt(GM / Integrator.r0) / Integrator.r0])
 
 # Load radar data
 data = np.loadtxt(output_path)
 times = data[:, 0]
 measurements = data[:, 1:3]
-
-rho_func = lambda r: atmos_ussa1976_rho(r - InitialConditions.earthRadius)
 
 ekf = ExtendedKalmanFilter(
     f_dynamics=f_dynamics,

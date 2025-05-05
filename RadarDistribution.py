@@ -9,7 +9,7 @@ def distribute_radars2D(Hdark, R_earth):
     radar_coors = np.column_stack((np.full(num_stations, R_earth), interval_points))
     return radar_coors
 
-
+'''
 def fibonacci_sphere_grid(N):
     gold = 0.5 * (1 + np.sqrt(5))
     ind = np.array([i for i in range(0, N)])
@@ -70,3 +70,4 @@ def plot3D(rs, interactive=False):
     ax.set_aspect('equal')
     # ax.set_axis_off() #optional
     plt.show()
+'''

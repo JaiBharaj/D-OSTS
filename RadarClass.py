@@ -1,12 +1,12 @@
 import numpy as np
 
 class Radar:
-    def __init__(self, ID, location):
+    def __init__(self, ID, location, sigma=10, k=0.02):
         self.__ID = ID
         self.__location = np.array(location)
         self.__visibility_angle = np.pi / 2  # 80-90 degrees
-        self.__sigma_0 = 10  # baseline error typically 10-50m
-        self.__k = 0.02  # scaling factor typically 0.01-0.05 m/km
+        self.__sigma_0 = sigma  # baseline error typically 10-50m
+        self.__k = k  # scaling factor typically 0.01-0.05 m/km
         self.satellite_measurements = {'time': [], 'visibility': [], 'r': [], 'theta': []}
 
     # method to get ID
@@ -20,6 +20,19 @@ class Radar:
     # method to get visibility angle
     def get_visibility_angle(self):
         return self.__visibility_angle
+
+    def get_noise(self):
+        noise_values = []
+        for i, visible in enumerate(self.satellite_measurements['visibility']):
+            if visible:
+                r = self.satellite_measurements['r'][i]
+                theta = self.satellite_measurements['theta'][i]
+                R = self.__location[0]
+                distance = np.sqrt(r ** 2 + R ** 2 - 2 * r * R * np.cos(theta - self.__location[1]))
+                noise_values.append(self.__sigma_0 + self.__k * distance)
+            else:
+                noise_values.append(np.nan)
+        return noise_values
 
     @staticmethod
     def polar_to_cartesian(position):
