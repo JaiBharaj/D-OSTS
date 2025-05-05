@@ -76,7 +76,7 @@ with open(output_path, 'r') as f:
 # Measurement model
 H = np.array([
     [1, 0, 0, 0],
-    [0, 0, 1, 0]
+    [0, 0, 0, 0]
 ])
 
 # Measurement noise
@@ -153,7 +153,7 @@ for i in range(len(measurement_times)):
         is_measured = False
     else:
         # Update R dynamically based on per-step measurement uncertainty
-        ekf.R = np.diag([sigma_r**2, sigma_theta**2])
+        ekf.R = np.diag([sigma_r ** 2, sigma_theta ** 2])
         x, P = ekf.predict(dt)
         x, P = ekf.update(z)
         is_measured = True
