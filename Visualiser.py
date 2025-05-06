@@ -301,11 +301,12 @@ class Visualiser2D:
         plt.show()
 
 class Visualiser3D:
-    def __init__(self, trajectory_file_path, prediction_file_path, break_point=0, MAX_STEPS=500):
+    def __init__(self, trajectory_file_path, prediction_file_path, break_point=0, mode='prewritten', MAX_STEPS=50000):
         # Initialise parameters
         self.earth_radius = InitialConditions.earthRadius
         self.stop_distance = self.earth_radius + break_point
         self.initial_altitude = InitialConditions.initSatAlt
+        self.mode = mode
 
         # File paths
         self.TRAJECTORY_FILE = trajectory_file_path
@@ -425,35 +426,84 @@ class Visualiser3D:
 
     def read_next_position(self):
         with open(self.TRAJECTORY_FILE, 'r') as f:
-            while True:
-                pos = f.tell()
-                line = f.readline()
-                if not line:
-                    f.seek(pos)
-                    # time.sleep(0.05)
-                    continue
-                try:
-                    x, y, z = map(float, line.strip().split())
-                    yield x, y, z
-                except ValueError:
-                    continue
+            if self.mode == 'prewritten':
+                for line in f:
+                    try:
+                        _, r, theta, phi = map(float, line.strip().split())
+                        x = r * np.sin(theta) * np.cos(phi)
+                        y = r * np.sin(theta) * np.sin(phi)
+                        z = r * np.cos(theta)
+                        yield x, y, z
+                        # time.sleep(0.05)  # Simulate streaming delay
+                    except ValueError:
+                        continue
+            else:  # 'realtime'
+                while True:
+                    pos = f.tell()
+                    line = f.readline()
+                    if not line:
+                        f.seek(pos)
+                        # time.sleep(0.01)
+                        continue
+                    try:
+                        _, r, theta, phi = map(float, line.strip().split())
+                        x = r * np.sin(theta) * np.cos(phi)
+                        y = r * np.sin(theta) * np.sin(phi)
+                        z = r * np.cos(theta)
+                        yield x, y, z
+                    except ValueError:
+                        continue
 
     def read_next_prediction(self):
+        def spherical_to_cartesian(r, theta, phi):
+            x = r * np.sin(phi) * np.cos(theta)
+            y = r * np.sin(phi) * np.sin(theta)
+            z = r * np.cos(phi)
+            return x, y, z
+
+        def spherical_uncertainty_to_cartesian(r, theta, phi, dr, dtheta, dphi):
+            # Jacobian-based approximation of standard deviations in Cartesian coords
+            sx = np.sqrt(
+                (np.sin(phi) * np.cos(theta) * dr) ** 2 +
+                (r * np.cos(phi) * np.cos(theta) * dphi) ** 2 +
+                (r * np.sin(phi) * np.sin(theta) * dtheta) ** 2
+            )
+            sy = np.sqrt(
+                (np.sin(phi) * np.sin(theta) * dr) ** 2 +
+                (r * np.cos(phi) * np.sin(theta) * dphi) ** 2 +
+                (r * np.sin(phi) * np.cos(theta) * dtheta) ** 2
+            )
+            sz = np.sqrt(
+                (np.cos(phi) * dr) ** 2 +
+                (r * np.sin(phi) * dphi) ** 2
+            )
+            return sx, sy, sz
+
         with open(self.PREDICTION_FILE, 'r') as f:
-            while True:
-                pos = f.tell()
-                line = f.readline()
-                if not line:
-                    f.seek(pos)
-                    # time.sleep(0.05)
-                    continue
-                try:
-                    parts = line.strip().split()
-                    if len(parts) == 7:
-                        x, y, z, std_x, std_y, std_z, is_meas = map(float, parts)
+            if self.mode == 'prewritten':
+                for line in f:
+                    try:
+                        _, r, theta, phi, dr, dtheta, dphi, is_meas = map(float, line.strip().split())
+                        x, y, z = spherical_to_cartesian(r, theta, phi)
+                        std_x, std_y, std_z = spherical_uncertainty_to_cartesian(r, theta, phi, dr, dtheta, dphi)
                         yield x, y, z, std_x, std_y, std_z, int(is_meas)
-                except ValueError:
-                    continue
+                    except ValueError:
+                        continue
+            else:  # realtime mode
+                while True:
+                    pos = f.tell()
+                    line = f.readline()
+                    if not line:
+                        f.seek(pos)
+                        # time.sleep(0.01)
+                        continue
+                    try:
+                        _, r, theta, phi, dr, dtheta, dphi, is_meas = map(float, line.strip().split())
+                        x, y, z = spherical_to_cartesian(r, theta, phi)
+                        std_x, std_y, std_z = spherical_uncertainty_to_cartesian(r, theta, phi, dr, dtheta, dphi)
+                        yield x, y, z, std_x, std_y, std_z, int(is_meas)
+                    except ValueError:
+                        continue
 
     def load_data(self):
         pos_gen = self.read_next_position()
