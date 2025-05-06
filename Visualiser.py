@@ -241,12 +241,32 @@ class Visualiser2D:
                 if self.uncertainty_polygon is not None:
                     self.uncertainty_polygon.remove()
 
-                # Create new uncertainty polygon
+                # Create new rotated uncertainty polygon
                 polygon_points = []
+
+                # Forward pass (lower boundary)
                 for x, y, sx, sy in zip(pred_xs, pred_ys, std_xs, std_ys):
-                    polygon_points.append((x - sx, y - sy))
+                    r_vec = np.array([x, y])
+                    r_norm = np.linalg.norm(r_vec)
+                    if r_norm == 0:
+                        continue  # skip to avoid division by zero
+                    r_hat = r_vec / r_norm
+                    t_hat = np.array([-r_hat[1], r_hat[0]])  # perpendicular
+
+                    offset = sx * r_hat + sy * t_hat
+                    polygon_points.append((x - offset[0], y - offset[1]))
+
+                # Reverse pass (upper boundary)
                 for x, y, sx, sy in reversed(list(zip(pred_xs, pred_ys, std_xs, std_ys))):
-                    polygon_points.append((x + sx, y + sy))
+                    r_vec = np.array([x, y])
+                    r_norm = np.linalg.norm(r_vec)
+                    if r_norm == 0:
+                        continue
+                    r_hat = r_vec / r_norm
+                    t_hat = np.array([-r_hat[1], r_hat[0]])
+
+                    offset = sx * r_hat + sy * t_hat
+                    polygon_points.append((x + offset[0], y + offset[1]))
 
                 self.uncertainty_polygon = Polygon(polygon_points, closed=True,
                                                    color='blue', alpha=0.15, zorder=2)
