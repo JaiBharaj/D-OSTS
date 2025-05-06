@@ -54,7 +54,7 @@ class Radar:
         cos_angle_difference = np.dot(rad_to_sat, rad_normal)  # cosine of angle between radar and satellite
         return cos_angle_difference >= np.cos(self.__visibility_angle)
 
-    # method to record satellites position at a time, if not visible then position recorded as 0,0
+    # method to record satellites position at a time, if not visible then position recorded as nan,nan
     def record_satellite(self, time, satellite_position):
         if self.__last_recorded_time is not None:
             if time - self.__last_recorded_time < self.__measurement_interval:
