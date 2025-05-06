@@ -69,16 +69,17 @@ H = np.array([
 ])
 
 # Measurement noise
-sigma_r_meas = 5.0        # m
+sigma_r_meas = 100.0        # m
 sigma_theta_meas = 1e-4   # rad
 R = np.diag([sigma_r_meas**2, sigma_theta_meas**2])
 
 # Process noise (initially zero)
-Q = np.zeros((4, 4))
+# Q = np.zeros((4, 4))
+Q = np.diag([10000, 0, 0.0000001, 0])
 
 # Initial uncertainty
 P0 = np.diag([
-    100.0**2,        # r
+    10.0**2,        # r
     1.0**2,         # vr
     (1e-4)**2,      # theta
     (1e-4)**2       # omega
@@ -97,7 +98,7 @@ f_jacobian = lambda x: compute_F_analytic(
 )
 
 f_dynamics = lambda x: PolarAccelerations.accelerations(x[0], x[1], x[2], x[3])
-x0 = np.array([rk.r0, 0.0, 0.0, np.sqrt(GM / rk.r0) / rk.r0])
+x0 = np.array([rk.r0, 0.0, rk.theta0, np.sqrt(GM / rk.r0) / rk.r0])
 
 # Load radar data
 data = np.loadtxt(output_path)
