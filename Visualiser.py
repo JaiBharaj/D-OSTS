@@ -172,6 +172,17 @@ class Visualiser2D:
                 pass
             time.sleep(0.00001)
 
+    # Estimate local direction of motion from trajectory
+    def direction_of_motion(self, x1, y1, x2, y2):
+        dx = x2 - x1
+        dy = y2 - y1
+        norm = np.hypot(dx, dy)
+        if norm == 0:
+            return np.array([1, 0]), np.array([0, 1])  # fallback
+        tangent = np.array([dx, dy]) / norm
+        normal = np.array([-tangent[1], tangent[0]])
+        return tangent, normal
+
     def update(self, frame):
         MAX_STEPS = 50000
 
@@ -244,28 +255,24 @@ class Visualiser2D:
                 # Create new rotated uncertainty polygon
                 polygon_points = []
 
-                # Forward pass (lower boundary)
-                for x, y, sx, sy in zip(pred_xs, pred_ys, std_xs, std_ys):
-                    r_vec = np.array([x, y])
-                    r_norm = np.linalg.norm(r_vec)
-                    if r_norm == 0:
-                        continue  # skip to avoid division by zero
-                    r_hat = r_vec / r_norm
-                    t_hat = np.array([-r_hat[1], r_hat[0]])  # perpendicular
+                # Forward pass (lower edge)
+                for i in range(1, len(pred_xs)):
+                    x, y = pred_xs[i], pred_ys[i]
+                    x_prev, y_prev = pred_xs[i - 1], pred_ys[i - 1]
+                    sx, sy = std_xs[i], std_ys[i]
 
-                    offset = sx * r_hat + sy * t_hat
+                    t_hat, n_hat = self.direction_of_motion(x_prev, y_prev, x, y)
+                    offset = sx * t_hat + sy * n_hat
                     polygon_points.append((x - offset[0], y - offset[1]))
 
-                # Reverse pass (upper boundary)
-                for x, y, sx, sy in reversed(list(zip(pred_xs, pred_ys, std_xs, std_ys))):
-                    r_vec = np.array([x, y])
-                    r_norm = np.linalg.norm(r_vec)
-                    if r_norm == 0:
-                        continue
-                    r_hat = r_vec / r_norm
-                    t_hat = np.array([-r_hat[1], r_hat[0]])
+                # Reverse pass (upper edge)
+                for i in reversed(range(1, len(pred_xs))):
+                    x, y = pred_xs[i], pred_ys[i]
+                    x_prev, y_prev = pred_xs[i - 1], pred_ys[i - 1]
+                    sx, sy = std_xs[i], std_ys[i]
 
-                    offset = sx * r_hat + sy * t_hat
+                    t_hat, n_hat = self.direction_of_motion(x_prev, y_prev, x, y)
+                    offset = sx * t_hat + sy * n_hat
                     polygon_points.append((x + offset[0], y + offset[1]))
 
                 self.uncertainty_polygon = Polygon(polygon_points, closed=True,
