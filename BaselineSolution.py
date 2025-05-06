@@ -11,8 +11,8 @@ from Visualiser import Visualiser2D
 from PredictorIntegrator import RK45Integrator
 
 ########## GENERATING TRUE TRAJECTORY ##########
-Integrator.initialize(mu_value=InitialConditions.gravConstant * InitialConditions.earthMass)
-Integrator.get_trajectory()
+rk = Integrator()
+rk.get_trajectory()
 
 ########## RADAR STATION NOISY MEASUREMENTS ##########
 input_path = "trajectory_without_noise.txt"
@@ -97,7 +97,7 @@ f_jacobian = lambda x: compute_F_analytic(
 )
 
 f_dynamics = lambda x: PolarAccelerations.accelerations(x[0], x[1], x[2], x[3])
-x0 = np.array([Integrator.r0, 0.0, 0.0, np.sqrt(GM / Integrator.r0) / Integrator.r0])
+x0 = np.array([rk.r0, 0.0, 0.0, np.sqrt(GM / rk.r0) / rk.r0])
 
 # Load radar data
 data = np.loadtxt(output_path)
