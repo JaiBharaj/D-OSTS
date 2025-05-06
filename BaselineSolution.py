@@ -27,6 +27,7 @@ for i, (r_radar, theta_radar) in enumerate(radar_positions):
     radar = Radar(
         ID=f"Radar_{i}",
         location=[r_radar, theta_radar],
+        H_dark=H_dark,
         sigma=100
     )
     radars.append(radar)
@@ -75,7 +76,7 @@ R = np.diag([sigma_r_meas**2, sigma_theta_meas**2])
 
 # Process noise (initially zero)
 # Q = np.zeros((4, 4))
-Q = np.diag([10000, 0, 0.0000001, 0])
+Q = np.diag([1000, 0, 1e-7, 0])
 
 # Initial uncertainty
 P0 = np.diag([

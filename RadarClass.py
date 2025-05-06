@@ -1,16 +1,17 @@
 import numpy as np
 
 class Radar:
-    def __init__(self, ID, location, sigma=50, k=0.05):
+    def __init__(self, ID, location, H_dark=100000, sigma=50, k=0.05):
         self.__ID = ID
         self.__location = np.array(location)
         self.__visibility_angle = np.pi / 2  # 80-90 degrees
         self.__sigma_0 = sigma  # baseline error typically 10-50m
         self.__min_sigma = 1.0  # ensures noise doesn't get unrealistically small
         self.__k = k  # scaling factor typically 0.01-0.05 m/km
+        self.__H_dark = H_dark  # maximum altitude for detection
         self.satellite_measurements = {'time': [], 'visibility': [], 'r': [], 'theta': []}
         self.__last_recorded_time = None
-        self.__measurement_interval = 1000.0  # seconds
+        self.__measurement_interval = 100.0  # seconds
 
     # method to get ID
     def get_ID(self):
@@ -46,6 +47,11 @@ class Radar:
 
     # method to check whether satellite is visible by a radar station
     def check_visibility(self, satellite_position):
+        r_sat, theta_sat = satellite_position
+        # First check if satellite is above minimum altitude
+        if r_sat - self.__location[0] < self.__H_dark:
+            return False
+
         cart_rad = self.polar_to_cartesian(self.__location)
         cart_sat = self.polar_to_cartesian(satellite_position)
         rad_to_sat = (cart_sat - cart_rad)  # vector from radar station to satellite
