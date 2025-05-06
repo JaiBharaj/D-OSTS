@@ -255,23 +255,39 @@ class Visualiser2D:
                 # Create new rotated uncertainty polygon
                 polygon_points = []
 
-                # Forward pass (lower edge)
-                for i in range(1, len(pred_xs)):
-                    x, y = pred_xs[i], pred_ys[i]
-                    x_prev, y_prev = pred_xs[i - 1], pred_ys[i - 1]
-                    sx, sy = std_xs[i], std_ys[i]
+                def get_direction(i, xs, ys):
+                    if 0 < i < len(xs) - 1:
+                        dx = xs[i + 1] - xs[i - 1]
+                        dy = ys[i + 1] - ys[i - 1]
+                    elif i > 0:
+                        dx = xs[i] - xs[i - 1]
+                        dy = ys[i] - ys[i - 1]
+                    elif i < len(xs) - 1:
+                        dx = xs[i + 1] - xs[i]
+                        dy = ys[i + 1] - ys[i]
+                    else:
+                        return np.array([1.0, 0.0]), np.array([0.0, 1.0])  # fallback
 
-                    t_hat, n_hat = self.direction_of_motion(x_prev, y_prev, x, y)
+                    norm = np.hypot(dx, dy)
+                    if norm == 0:
+                        return np.array([1.0, 0.0]), np.array([0.0, 1.0])
+                    tangent = np.array([dx, dy]) / norm
+                    normal = np.array([-tangent[1], tangent[0]])
+                    return tangent, normal
+
+                # Forward pass
+                for i in range(len(pred_xs)):
+                    x, y = pred_xs[i], pred_ys[i]
+                    sx, sy = std_xs[i], std_ys[i]
+                    t_hat, n_hat = get_direction(i, pred_xs, pred_ys)
                     offset = sx * t_hat + sy * n_hat
                     polygon_points.append((x - offset[0], y - offset[1]))
 
-                # Reverse pass (upper edge)
-                for i in reversed(range(1, len(pred_xs))):
+                # Reverse pass
+                for i in reversed(range(len(pred_xs))):
                     x, y = pred_xs[i], pred_ys[i]
-                    x_prev, y_prev = pred_xs[i - 1], pred_ys[i - 1]
                     sx, sy = std_xs[i], std_ys[i]
-
-                    t_hat, n_hat = self.direction_of_motion(x_prev, y_prev, x, y)
+                    t_hat, n_hat = get_direction(i, pred_xs, pred_ys)
                     offset = sx * t_hat + sy * n_hat
                     polygon_points.append((x + offset[0], y + offset[1]))
 
