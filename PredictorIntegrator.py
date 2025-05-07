@@ -54,7 +54,6 @@ class Integrator3D(Integrator):
             method="RK45",
             rtol=1e-7,
             atol=1e-9,
-            first_step=1.0,
             max_step=1.5
         )
         return sol.y[:, -1]
