@@ -2,7 +2,7 @@ import numpy as np
 from CrudeInitialConditions import InitialConditions
 import RadarCombineMeasurements
 from Atmospheric_Density import atmos_ussa1976_rho
-from RadarClass import Radar
+from RadarClassNew import Radar
 from RadarDistribution import distribute_radars2D
 from CoordinateTransformations import PolarAccelerations
 from NumericalIntegrator import Integrator
@@ -18,17 +18,18 @@ rk.get_trajectory()
 input_path = "trajectory_without_noise.txt"
 output_path = "noisy_radar_data.txt"
 
-H_dark = 100000  # Radar min altitude (m)
+H_dark = 200000  # Radar min altitude (m)
 radar_positions = distribute_radars2D(H_dark, InitialConditions.earthRadius)
 radars = []
 
 # Initialise radar stations
 for i, (r_radar, theta_radar) in enumerate(radar_positions):
     radar = Radar(
+        mode='2d',
         ID=f"Radar_{i}",
         location=[r_radar, theta_radar],
-        H_dark=H_dark,
-        sigma=100
+#         H_dark=H_dark,
+#         sigma=100
     )
     radars.append(radar)
 
