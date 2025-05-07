@@ -49,126 +49,51 @@ class ExtendedKalmanFilter:
         self.P = F_disc @ self.P @ F_disc.T + self.Q
         return self.x, self.P
 
-    def update(self, z):
-        """
-        Measurement update step:
-        1. Compute innovation
-        2. Compute Kalman gain
-        3. Update state and covariance
-        """
-        # 1.
+
+    def update(self, z, eps=1e-8):
+        # 1. innovation
         z_pred = self.H @ self.x
-        y = z - z_pred
+        y      = z - z_pred
 
-        #2.
+        # 2. innovation covariance
         S = self.H @ self.P @ self.H.T + self.R
-        K = self.P @ self.H.T @ np.linalg.inv(S)
-
-        # 3.
+        
+        K = np.linalg.solve(S.T, (self.P @ self.H.T).T).T
+        # 3. state update
         self.x = self.x + K @ y
+
+        # Joseph form for P to maintain symmetry/PD
         I = np.eye(self.P.shape[0])
-        self.P = (I - K @ self.H) @ self.P
+        self.P = (I - K @ self.H) @ self.P @ (I - K @ self.H).T \
+                 + K @ self.R @ K.T
+
         return self.x, self.P
-
-
-def compute_F_analytic(x, CD, A, m, GM, rho_func):
-    """
-    Computes the analytic Jacobian matrix F = ∂f/∂x for polar orbital dynamics with drag.
-
-    Parameters
-    ----------
-    x : ndarray (4,)
-        State vector [r, vr, theta, omega]
-    CD : float
-        Drag coefficient
-    A : float
-        Cross-sectional area of satellite (m^2)
-    m : float
-        Mass of satellite (kg)
-    GM : float
-        Gravitational constant x Earth mass (m^3/s^2)
-    rho_func : Callable
-        Function rho_func(r): returns atmospheric density at radius r
-
-    Returns
-    -------
-    F : ndarray (4, 4)
-        Jacobian matrix of the dynamics evaluated at x
-    """
-    r, vr, theta, omega = x
-
-    # Velocity components
-    v_theta = r * omega
-    v = np.hypot(vr, v_theta)
-
-    # Drag factor
-    rho = rho_func(r)
-    D = 0.5 * rho * CD * A / m
-
-    # Partial derivatives of v
-    if v == 0:
-        dv_dvr    = 0.0
-        dv_domega = 0.0
-        dv_dr     = 0.0
-    else:
-        dv_dvr    = vr / v
-        dv_domega = r**2 * omega / v
-        dv_dr     = r * omega**2 / v
-
-    # Jacobian matrix
-    F = np.zeros((4, 4))
-
-    # ∂(dr/dt)/∂x = [0, 1, 0, 0]
-    F[0, 1] = 1.0
-
-    # ∂(dvr/dt)/∂x
-    F[1, 0] = omega**2 + 2 * GM / r**3 - D * vr * dv_dr
-    F[1, 1] = - D * (v + vr * dv_dvr)
-    F[1, 3] = 2 * r * omega - D * vr * dv_domega
-
-    # ∂(dtheta/dt)/∂x = [0, 0, 0, 1]
-    F[2, 3] = 1.0
-
-    # ∂(domega/dt)/∂x
-    F[3, 0] = 2 * vr * omega / r**2 - D * omega * dv_dr
-    F[3, 1] = -2 * omega / r - D * omega * dv_dvr
-    F[3, 3] = -2 * vr / r - D * (v + omega * dv_domega)
-
-    return F
 
 def compute_F_spherical(x, CD, A, m, GM, rho_func):
     r, vr, theta, omega_theta, phi, omega_phi = x
-
-    # Precompute trigonometric terms
     sin_theta = np.sin(theta)
     cos_theta = np.cos(theta)
     sin2 = sin_theta**2
     cos_sin = cos_theta * sin_theta
 
-    # Atmospheric density & drag constant
     rho = rho_func(r - InitialConditions.earthRadius)
-    D = 0.5 * rho * CD * A / m
+    D   = 0.5 * rho * CD * A / m
 
-    # Velocity components
     v_theta = r * omega_theta
     v_phi   = r * sin_theta * omega_phi
     v_sq    = vr**2 + v_theta**2 + v_phi**2
-    v       = np.sqrt(v_sq) if v_sq > 1e-8 else 1e-8
+    v       = np.sqrt(v_sq) if v_sq>1e-8 else 1e-8
 
-    # Partial derivatives of v wrt state
+    # ∂v/∂x
     dv = np.zeros(6)
-    dv[0] = (v_theta * omega_theta + v_phi * omega_phi * sin_theta) * r / v
+    dv[0] = (v_theta*omega_theta + v_phi*omega_phi*sin_theta) * r / v
     dv[1] = vr / v
     dv[2] = (v_phi * omega_phi * cos_theta) * r / v
     dv[3] = r**2 * omega_theta / v
     dv[5] = r**2 * sin2 * omega_phi / v
 
-    # Initialize Jacobian
-    F = np.zeros((6, 6))
-
-    # dr/dt = vr
-    F[0, 1] = 1.0
-
+    F = np.zeros((6,6))
+    F[0,1] = 1.0
     # dvr/dt = r*(ωθ^2 + sin^2θ * ωφ^2) - GM/r^2 - D * vr * v
     F[1, 0] = omega_theta**2 + sin2 * omega_phi**2 + 2*GM / r**3 - D * vr * dv[0]
     F[1, 1] = -D * (v + vr * dv[1])
@@ -192,10 +117,16 @@ def compute_F_spherical(x, CD, A, m, GM, rho_func):
     # dωφ/dt = -2*vr*ωφ/r - 2*(ωθ/ tanθ)*ωφ - D*ωφ*v
     F[5, 0] = 2 * vr * omega_phi / r**2    - D * omega_phi * dv[0]
     F[5, 1] = -2 * omega_phi / r            - D * omega_phi * dv[1]
-    F[5, 2] = 2 * omega_theta * omega_phi / sin2 - D * omega_phi * dv[2]
     F[5, 3] = -2 * omega_phi / np.tan(theta)     - D * omega_phi * dv[3]
     F[5, 5] = -2 * vr / r - 2 * omega_theta / np.tan(theta) - D * (v + omega_phi * dv[5])
 
+    # safe denominator for the 1/sin²θ term:
+    sin2_safe = max(sin2, 1e-8)
+
+    # ∂(dωφ/dt)/∂θ
+    F[5,2] = 2 * omega_theta * omega_phi / sin2_safe \
+             - D * omega_phi * dv[2]
+    
     return F
 
 """
