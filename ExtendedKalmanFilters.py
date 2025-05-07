@@ -195,6 +195,19 @@ def compute_F_spherical(x, CD, A, m, GM, rho_func):
     
     return F
 
+def estimate_crash_site(x, P, integrator, f_dynamics, N=100):
+    crash_angles = []
+    for _ in range(N):
+        sample = np.random.multivariate_normal(x, P)
+        t = 0.0
+        dt = 1.0
+        while sample[0] > InitialConditions.earthRadius:
+            sample = integrator.step(f_dynamics, sample, dt)
+            t += dt
+        crash_angles.append(sample[2])  # θ at impact
+    crash_angles = np.array(crash_angles)
+    return np.mean(crash_angles), np.std(crash_angles)
+
 """
 Usage:
 
