@@ -8,7 +8,7 @@ from CoordinateTransformations import SphericalAccelerations
 from NumericalIntegrator import Integrator
 from ExtendedKalmanFilters import ExtendedKalmanFilter, compute_F_analytic
 from Visualiser import Visualiser3D
-from PredictorIntegrator import RK45Integrator
+from PredictorIntegrator import RK45Integrator_3D
 
 ########## GENERATING TRUE TRAJECTORY ##########
 rk = Integrator()
@@ -96,7 +96,7 @@ GM = InitialConditions.gravConstant * InitialConditions.earthMass
 
 rho_func = lambda r: atmos_ussa1976_rho(r - InitialConditions.earthRadius)
 
-f_jacobian = lambda x: compute_F_analytic(
+f_jacobian = lambda x: compute_F_spherical(
     x, CD, A, m, GM,
     rho_func=rho_func
 )
@@ -117,7 +117,7 @@ ekf = ExtendedKalmanFilter(
     R=R,
     x0=x0,
     P0=P0,
-    integrator=RK45Integrator(CD, A, m, GM, rho_func)
+    integrator=RK45Integrator_3D(CD, A, m, GM, rho_func)
 )
 
 input_file = input_path
