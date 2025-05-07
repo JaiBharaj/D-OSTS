@@ -16,6 +16,13 @@ class Integrator:
         self.phi_dot0 = InitialConditions.initSatPhidot
         self.mu = InitialConditions.gravConstant * InitialConditions.earthMass
 
+        v_circ = np.sqrt(self.mu / self.r0)
+        v_target = v_circ - 80.0
+        term_sq  = v_target**2 - (self.r0 * self.phi_dot0)**2
+        if term_sq < 0:
+            raise ValueError("phi_dot0 too large for given Δv or orbit height")
+        self.lam_dot0 = - np.sqrt(term_sq) / (self.r0 * np.sin(self.phi0)) 
+
     def ode_system(t, u):
         u = np.asarray(u).flatten()
         if len(u) != 4:
@@ -89,12 +96,7 @@ class Integrator:
         return sol
     
     def runge_kutta45_3d(self):
-        v_circ = np.sqrt(self.mu / self.r0)
-        v_target = v_circ - 80.0
-        term_sq  = v_target**2 - (self.r0 * self.phi_dot0)**2
-        if term_sq < 0:
-            raise ValueError("phi_dot0 too large for given Δv or orbit height")
-        lam_dot0 = - np.sqrt(term_sq) / (self.r0 * np.sin(self.phi0)) 
+        
 
         y0 = np.array([
             self.r0,      # r
@@ -102,7 +104,7 @@ class Integrator:
             self.phi0,    # φ
             self.phi_dot0,# φ̇
             self.lam0,    # λ
-            lam_dot0            # λ̇
+            self.lam_dot0            # λ̇
         ], dtype=float)
 
         sol = solve_ivp(
@@ -154,6 +156,7 @@ class Integrator:
         # t_arr, r_arr, phi_arr, lam_arr = t_arr[keep], r_arr[keep], phi_arr[keep], lam_arr[keep]
 
         fname = 'trajectory_without_noise_3d_xyz.txt' if to_xyz else 'trajectory_without_noise_3d.txt'
+        #with open(fname, 'w') as f, open('trajectory_3d_xyz_pred.txt', 'w') as f_pred:
         with open(fname, 'w') as f:
             if to_xyz:
                 x = r_arr * np.sin(phi_arr) * np.cos(lam_arr)
@@ -161,6 +164,8 @@ class Integrator:
                 z = r_arr * np.cos(phi_arr)
                 for t, xi, yi, zi in zip(t_arr, x, y, z):
                     f.write(f"{t:.3f} {xi:.3f} {yi:.3f} {zi:.3f}\n")
+                    # f.write(f"{xi:.3f} {yi:.3f} {zi:.3f}\n")
+                    # f_pred.write(f"{0} {0} {0} {0} {0} {0} {0}\n")
             else:
                 for t, r, ph, la in zip(t_arr, r_arr, phi_arr, lam_arr):
                     f.write(f"{t:.3f} {r:.3f} {la:.6f} {ph:.6f}\n")
