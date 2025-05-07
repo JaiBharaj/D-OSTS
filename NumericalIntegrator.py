@@ -18,10 +18,10 @@ class Integrator:
 
         v_circ = np.sqrt(self.mu / self.r0)
         v_target = v_circ - 80.0
-        term_sq  = v_target**2 - (self.r0 * self.phi_dot0)**2
+        term_sq = v_target ** 2 - (self.r0 * self.phi_dot0) ** 2
         if term_sq < 0:
             raise ValueError("phi_dot0 too large for given Δv or orbit height")
-        self.lam_dot0 = - np.sqrt(term_sq) / (self.r0 * np.sin(self.phi0)) 
+        self.lam_dot0 = - np.sqrt(term_sq) / (self.r0 * np.sin(self.phi0))
 
     def ode_system(t, u):
         u = np.asarray(u).flatten()
@@ -168,7 +168,7 @@ class Integrator:
                     # f_pred.write(f"{0} {0} {0} {0} {0} {0} {0}\n")
             else:
                 for t, r, ph, la in zip(t_arr, r_arr, phi_arr, lam_arr):
-                    f.write(f"{t:.3f} {r:.3f} {la:.6f} {ph:.6f}\n")
+                    f.write(f"{t:.3f} {r:.3f} {ph:.6f} {la:.6f}\n")
 
         print(f"Wrote {len(t_arr)} points to {fname}")
 

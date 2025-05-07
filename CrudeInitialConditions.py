@@ -14,4 +14,4 @@ class InitialConditions:
     initSatPhi = np.pi / 2  # equatorial
     initSatLam = 0.0
     initSatRdot = 0.0
-    initSatPhidot = np.radians(0.0) / 1.0
+    initSatPhidot = np.radians(0.0)

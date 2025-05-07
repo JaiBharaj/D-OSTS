@@ -1,4 +1,3 @@
-
 import numpy as np
 from CrudeInitialConditions import InitialConditions
 import RadarCombineMeasurements
@@ -9,7 +8,7 @@ from CoordinateTransformations import SphericalAccelerations
 from NumericalIntegrator import Integrator
 from ExtendedKalmanFilters import ExtendedKalmanFilter, compute_F_spherical
 from Visualiser import Visualiser3D
-from PredictorIntegrator import Integrator3D, RK45Integrator_3D
+from PredictorIntegrator import Integrator3D
 
 ########## GENERATING TRUE TRAJECTORY ##########
 rk = Integrator()
@@ -104,7 +103,7 @@ f_jacobian = lambda x: compute_F_spherical(
 
 f_dynamics = lambda x: SphericalAccelerations.accelerations(x[0], x[1], x[2], x[3], x[4], x[5])
 x0 = np.array([rk.r0, 
-               InitialConditions.initSatRdot, 
+               InitialConditions.initSatRdot,
                InitialConditions.initSatPhi,
                InitialConditions.initSatPhidot,
                InitialConditions.initSatLam,
@@ -123,8 +122,7 @@ ekf = ExtendedKalmanFilter(
     R=R,
     x0=x0,
     P0=P0,
-    integrator=RK45Integrator_3D(CD, A, m, GM, rho_func)
-#    integrator=Integrator3D(CD, A, m, GM, rho_func)
+    integrator=Integrator3D()
 )
 
 input_file = input_path

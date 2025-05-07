@@ -39,9 +39,9 @@ class Radar:
     @staticmethod
     def spherical_to_cartesian(position):
         r, theta, phi = position
-        x = r*np.cos(theta)*np.sin(phi)
-        y = r*np.sin(theta)*np.sin(phi)
-        z = r*np.cos(phi)
+        x = r * np.sin(phi) * np.cos(theta)  # phi is polar angle, theta is azimuthal
+        y = r * np.sin(phi) * np.sin(theta)
+        z = r * np.cos(phi)
         return np.array([x,y,z])
     
     # method to compute distnce between two position vectors in polar/spherical coordinates
@@ -79,11 +79,9 @@ class Radar:
             theta = theta%(2*np.pi)
         elif self.__mode == '3D':
             r, theta, phi = satellite_position
-            theta = theta%(2*np.pi)
-            phi = phi%(2*np.pi)
-            if phi > np.pi:
-                phi = 2*np.pi - phi
-                
+            theta = theta % np.pi  # theta: polar angle (0 to π)
+            phi = phi % (2 * np.pi)  # phi: azimuthal angle (0 to 2π)
+
         # check if satellite is visible by radar station
         visible = self.check_visibility(satellite_position)
         if not visible:
