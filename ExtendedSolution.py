@@ -102,7 +102,7 @@ f_jacobian = lambda x: compute_F_analytic(
 )
 
 f_dynamics = lambda x: SphericalAccelerations.accelerations(x[0], x[1], x[2], x[3], x[4], x[5])
-x0 = np.array([rk.r0, 0.0, rk.theta0, np.sqrt(GM / rk.r0) / rk.r0], rk.phi0, np.sqrt(GM / rk.r0) / rk.r0])
+x0 = np.array([rk.r0, 0.0, rk.theta0, np.sqrt(GM / rk.r0) / rk.r0, rk.phi0, np.sqrt(GM / rk.r0) / rk.r0])
 
 # Load radar data
 data = np.loadtxt(output_path)
