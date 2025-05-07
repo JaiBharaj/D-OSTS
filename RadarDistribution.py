@@ -9,7 +9,7 @@ def distribute_radars2D(Hdark, R_earth):
     radar_coors = np.column_stack((np.full(num_stations, R_earth), interval_points))
     return radar_coors
 
-'''
+
 def fibonacci_sphere_grid(N):
     gold = 0.5 * (1 + np.sqrt(5))
     ind = np.array([i for i in range(0, N)])
@@ -27,7 +27,7 @@ def distribute_radars3D(H, R=6371):
     theta, phi = fibonacci_sphere_grid(num_stations)
     return np.column_stack((np.full(num_stations, R), theta, phi))
 
-
+'''
 # optional plotting
 def plot_2D(ax, rs, R=6371):
     r, theta = rs.T
