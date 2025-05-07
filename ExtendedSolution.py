@@ -23,11 +23,11 @@ radar_positions = distribute_radars3D(H_dark, InitialConditions.earthRadius)
 radars = []
 
 # Initialise radar stations
-for i, (r_radar, theta_radar) in enumerate(radar_positions):
+for i, (r_radar, theta_radar, phi_radar) in enumerate(radar_positions):
     radar = Radar(
         mode='3d',
         ID=f"Radar_{i}",
-        location=[r_radar, theta_radar]
+        location=[r_radar, theta_radar, phi_radar]
     )
     radars.append(radar)
 
@@ -84,7 +84,7 @@ P0 = np.diag([
     10.0**2,        # r
     1.0**2,         # vr
     (1e-4)**2,      # theta
-    (1e-4)**2       # vtheta
+    (1e-4)**2,      # vtheta
     (1e-4)**2,      # phi
     (1e-4)**2       # vphi
 ])
@@ -101,8 +101,12 @@ f_jacobian = lambda x: compute_F_spherical(
     rho_func=rho_func
 )
 
+phi0 = InitialConditions.initSatPhi
+lam0 = InitialConditions.initSatLam
+
 f_dynamics = lambda x: SphericalAccelerations.accelerations(x[0], x[1], x[2], x[3], x[4], x[5])
-x0 = np.array([rk.r0, 0.0, rk.theta0, np.sqrt(GM / rk.r0) / rk.r0, rk.phi0, np.sqrt(GM / rk.r0) / rk.r0])
+# x0 = np.array([rk.r0, 0.0, phi0, np.sqrt(GM / rk.r0) / rk.r0, lam0, np.sqrt(GM / rk.r0) / rk.r0])
+x0 = np.array([rk.r0, rk.r_dot0, rk.phi0, rk.phi_dot0, rk.lam0, 0.0])
 
 # Load radar data
 data = np.loadtxt(output_path)

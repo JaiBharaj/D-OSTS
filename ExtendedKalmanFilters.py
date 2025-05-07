@@ -1,4 +1,5 @@
 import numpy as np
+from CrudeInitialConditions import InitialConditions
 
 class ExtendedKalmanFilter:
     """

@@ -78,7 +78,7 @@ class Radar:
             r, theta = satellite_position
             theta = theta%(2*np.pi)
         elif self.__mode == '3D':
-            t, theta, phi = satellite_position
+            r, theta, phi = satellite_position
             theta = theta%(2*np.pi)
             phi = phi%(2*np.pi)
             if phi > np.pi:
