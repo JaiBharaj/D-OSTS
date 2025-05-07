@@ -123,7 +123,7 @@ ekf = ExtendedKalmanFilter(
     R=R,
     x0=x0,
     P0=P0,
-    integrator=RK45Integrator_3D(CD, A, m, GM, rho_func)
+    integrator=Integrator(CD, A, m, GM, rho_func)
 )
 
 input_file = input_path
