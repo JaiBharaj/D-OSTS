@@ -69,6 +69,72 @@ class ExtendedKalmanFilter:
 
         return self.x, self.P
 
+def compute_F_analytic(x, CD, A, m, GM, rho_func):
+    """
+    Computes the analytic Jacobian matrix F = ∂f/∂x for polar orbital dynamics with drag.
+
+    Parameters
+    ----------
+    x : ndarray (4,)
+        State vector [r, vr, theta, omega]
+    CD : float
+        Drag coefficient
+    A : float
+        Cross-sectional area of satellite (m^2)
+    m : float
+        Mass of satellite (kg)
+    GM : float
+        Gravitational constant x Earth mass (m^3/s^2)
+    rho_func : Callable
+        Function rho_func(r): returns atmospheric density at radius r
+
+    Returns
+    -------
+    F : ndarray (4, 4)
+        Jacobian matrix of the dynamics evaluated at x
+    """
+    r, vr, theta, omega = x
+
+    # Velocity components
+    v_theta = r * omega
+    v = np.hypot(vr, v_theta)
+
+    # Drag factor
+    rho = rho_func(r)
+    D = 0.5 * rho * CD * A / m
+
+    # Partial derivatives of v
+    if v == 0:
+        dv_dvr    = 0.0
+        dv_domega = 0.0
+        dv_dr     = 0.0
+    else:
+        dv_dvr    = vr / v
+        dv_domega = r**2 * omega / v
+        dv_dr     = r * omega**2 / v
+
+    # Jacobian matrix
+    F = np.zeros((4, 4))
+
+    # ∂(dr/dt)/∂x = [0, 1, 0, 0]
+    F[0, 1] = 1.0
+
+    # ∂(dvr/dt)/∂x
+    F[1, 0] = omega**2 + 2 * GM / r**3 - D * vr * dv_dr
+    F[1, 1] = - D * (v + vr * dv_dvr)
+    F[1, 3] = 2 * r * omega - D * vr * dv_domega
+
+    # ∂(dtheta/dt)/∂x = [0, 0, 0, 1]
+    F[2, 3] = 1.0
+
+    # ∂(domega/dt)/∂x
+    F[3, 0] = 2 * vr * omega / r**2 - D * omega * dv_dr
+    F[3, 1] = -2 * omega / r - D * omega * dv_dvr
+    F[3, 3] = -2 * vr / r - D * (v + omega * dv_domega)
+
+    return F
+
+
 def compute_F_spherical(x, CD, A, m, GM, rho_func):
     r, vr, theta, omega_theta, phi, omega_phi = x
     sin_theta = np.sin(theta)
