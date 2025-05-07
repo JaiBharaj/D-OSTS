@@ -9,7 +9,7 @@ from CoordinateTransformations import SphericalAccelerations
 from NumericalIntegrator import Integrator
 from ExtendedKalmanFilters import ExtendedKalmanFilter, compute_F_spherical
 from Visualiser import Visualiser3D
-from PredictorIntegrator import RK45Integrator_3D
+from PredictorIntegrator import Integrator3D
 
 ########## GENERATING TRUE TRAJECTORY ##########
 rk = Integrator()
@@ -123,7 +123,7 @@ ekf = ExtendedKalmanFilter(
     R=R,
     x0=x0,
     P0=P0,
-    integrator=Integrator(CD, A, m, GM, rho_func)
+    integrator=Integrator3D(CD, A, m, GM, rho_func)
 )
 
 input_file = input_path
