@@ -1,3 +1,4 @@
+
 import numpy as np
 from CrudeInitialConditions import InitialConditions
 import RadarCombineMeasurements
@@ -84,7 +85,7 @@ P0 = np.diag([
     10.0**2,        # r
     1.0**2,         # vr
     (1e-4)**2,      # theta
-    (1e-4)**2,      # vtheta
+    (1e-4)**2,       # vtheta
     (1e-4)**2,      # phi
     (1e-4)**2       # vphi
 ])
@@ -101,12 +102,13 @@ f_jacobian = lambda x: compute_F_spherical(
     rho_func=rho_func
 )
 
-phi0 = InitialConditions.initSatPhi
-lam0 = InitialConditions.initSatLam
-
 f_dynamics = lambda x: SphericalAccelerations.accelerations(x[0], x[1], x[2], x[3], x[4], x[5])
-# x0 = np.array([rk.r0, 0.0, phi0, np.sqrt(GM / rk.r0) / rk.r0, lam0, np.sqrt(GM / rk.r0) / rk.r0])
-x0 = np.array([rk.r0, rk.r_dot0, rk.phi0, rk.phi_dot0, rk.lam0, 0.0])
+x0 = np.array([rk.r0, 
+               InitialConditions.initSatRdot, 
+               InitialConditions.initSatPhi, 
+               InitialConditions.initSatPhidot, 
+               InitialConditions.initSatLam, 
+               rk.lam_dot0])
 
 # Load radar data
 data = np.loadtxt(output_path)
@@ -121,9 +123,8 @@ ekf = ExtendedKalmanFilter(
     R=R,
     x0=x0,
     P0=P0,
-    integrator=Integrator3D(CD, A, m, GM, rho_func)
+    integrator=RK45Integrator_3D(CD, A, m, GM, rho_func)
 )
-
 
 input_file = input_path
 output_file = "ekf_predicted_trajectory_3d.txt"
