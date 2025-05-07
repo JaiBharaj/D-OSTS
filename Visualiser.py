@@ -453,9 +453,9 @@ class Visualiser3D:
                 for line in f:
                     try:
                         _, r, theta, phi = map(float, line.strip().split())
-                        x = r * np.sin(theta) * np.cos(phi)
-                        y = r * np.sin(theta) * np.sin(phi)
-                        z = r * np.cos(theta)
+                        x = r * np.sin(phi) * np.cos(theta)  # phi is polar, theta is azimuthal
+                        y = r * np.sin(phi) * np.sin(theta)
+                        z = r * np.cos(phi)
                         yield x, y, z
                         # time.sleep(0.05)  # Simulate streaming delay
                     except ValueError:
