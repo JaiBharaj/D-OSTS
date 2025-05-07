@@ -113,7 +113,7 @@ class Integrator:
             rtol=1e-7, 
             atol=1e-9,
             first_step=1.0, 
-            max_step=2.0,
+            max_step=1.5,
             events=self.hit_ground())
 
         return sol
@@ -149,11 +149,11 @@ class Integrator:
         phi_arr = res.y[2]
         lam_arr = res.y[4]
 
+        # ------ option ------
         # keep = self.downsample_indices(len(t_arr), n_save)
         # t_arr, r_arr, phi_arr, lam_arr = t_arr[keep], r_arr[keep], phi_arr[keep], lam_arr[keep]
 
-        fname = 'trajectory_3d_xyz.txt' if to_xyz else 'trajectory_3d_spherical.txt'
-        # with open(fname, 'w') as f, open('trajectory_3d_xyz_pred.txt', 'w') as f_pred:
+        fname = 'trajectory_without_noise_3d_xyz.txt' if to_xyz else 'trajectory_without_noise_3d.txt'
         with open(fname, 'w') as f:
             if to_xyz:
                 x = r_arr * np.sin(phi_arr) * np.cos(lam_arr)
@@ -161,8 +161,6 @@ class Integrator:
                 z = r_arr * np.cos(phi_arr)
                 for t, xi, yi, zi in zip(t_arr, x, y, z):
                     f.write(f"{t:.3f} {xi:.3f} {yi:.3f} {zi:.3f}\n")
-                    # f.write(f"{xi:.3f} {yi:.3f} {zi:.3f}\n")
-                    # f_pred.write(f"{0} {0} {0} {0} {0} {0} {0}\n")
             else:
                 for t, r, ph, la in zip(t_arr, r_arr, phi_arr, lam_arr):
                     f.write(f"{t:.3f} {r:.3f} {ph:.6f} {la:.6f}\n")
@@ -178,4 +176,4 @@ class Integrator:
 # integrator = Integrator()
 # integrator.get_trajectory_3d()
 
-# ------ Then you will get a text file named 'trajectory_3d_spherical.txt' in same path ------
+# ------ Then you will get a text file named 'trajectory_without_noise_3d.txt' in same path ------
