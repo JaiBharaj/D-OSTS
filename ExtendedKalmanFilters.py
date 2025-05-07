@@ -135,6 +135,67 @@ def compute_F_analytic(x, CD, A, m, GM, rho_func):
 
     return F
 
+def compute_F_spherical(x, CD, A, m, GM, rho_func):
+    r, vr, theta, omega_theta, phi, omega_phi = x
+
+    # Precompute trigonometric terms
+    sin_theta = np.sin(theta)
+    cos_theta = np.cos(theta)
+    sin2 = sin_theta**2
+    cos_sin = cos_theta * sin_theta
+
+    # Atmospheric density & drag constant
+    rho = rho_func(r - InitialConditions.earthRadius)
+    D = 0.5 * rho * CD * A / m
+
+    # Velocity components
+    v_theta = r * omega_theta
+    v_phi   = r * sin_theta * omega_phi
+    v_sq    = vr**2 + v_theta**2 + v_phi**2
+    v       = np.sqrt(v_sq) if v_sq > 1e-8 else 1e-8
+
+    # Partial derivatives of v wrt state
+    dv = np.zeros(6)
+    dv[0] = (v_theta * omega_theta + v_phi * omega_phi * sin_theta) * r / v
+    dv[1] = vr / v
+    dv[2] = (v_phi * omega_phi * cos_theta) * r / v
+    dv[3] = r**2 * omega_theta / v
+    dv[5] = r**2 * sin2 * omega_phi / v
+
+    # Initialize Jacobian
+    F = np.zeros((6, 6))
+
+    # dr/dt = vr
+    F[0, 1] = 1.0
+
+    # dvr/dt = r*(ωθ^2 + sin^2θ * ωφ^2) - GM/r^2 - D * vr * v
+    F[1, 0] = omega_theta**2 + sin2 * omega_phi**2 + 2*GM / r**3 - D * vr * dv[0]
+    F[1, 1] = -D * (v + vr * dv[1])
+    F[1, 2] = 2 * sin_theta * cos_theta * omega_phi**2 - D * vr * dv[2]
+    F[1, 3] = 2 * r * omega_theta            - D * vr * dv[3]
+    F[1, 5] = 2 * r * sin2 * omega_phi       - D * vr * dv[5]
+
+    # dθ/dt = ωθ
+    F[2, 3] = 1.0
+
+    # dωθ/dt = -2*vr*ωθ/r + sinθ*cosθ*ωφ^2 - D*ωθ*v
+    F[3, 0] = 2 * vr * omega_theta / r**2 - D * omega_theta * dv[0]
+    F[3, 1] = -2 * omega_theta / r          - D * omega_theta * dv[1]
+    F[3, 2] = cos_sin * omega_phi**2      - D * omega_theta * dv[2]
+    F[3, 3] = -2 * vr / r                  - D * (v + omega_theta * dv[3])
+    F[3, 5] = 2 * cos_sin * omega_phi      - D * omega_theta * dv[5]
+
+    # dφ/dt = ωφ
+    F[4, 5] = 1.0
+
+    # dωφ/dt = -2*vr*ωφ/r - 2*(ωθ/ tanθ)*ωφ - D*ωφ*v
+    F[5, 0] = 2 * vr * omega_phi / r**2    - D * omega_phi * dv[0]
+    F[5, 1] = -2 * omega_phi / r            - D * omega_phi * dv[1]
+    F[5, 2] = 2 * omega_theta * omega_phi / sin2 - D * omega_phi * dv[2]
+    F[5, 3] = -2 * omega_phi / np.tan(theta)     - D * omega_phi * dv[3]
+    F[5, 5] = -2 * vr / r - 2 * omega_theta / np.tan(theta) - D * (v + omega_phi * dv[5])
+
+    return F
 
 """
 Usage:
