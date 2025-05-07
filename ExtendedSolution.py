@@ -4,10 +4,10 @@ import RadarCombineMeasurements
 from Atmospheric_Density import atmos_ussa1976_rho
 from RadarClassNew import Radar
 from RadarDistribution import distribute_radars3D
-from CoordinateTransformations import PolarAccelerations
+from CoordinateTransformations import SphericalAccelerations
 from NumericalIntegrator import Integrator
 from ExtendedKalmanFilters import ExtendedKalmanFilter, compute_F_analytic
-from Visualiser import Visualiser2D
+from Visualiser import Visualiser3D
 from PredictorIntegrator import RK45Integrator
 
 ########## GENERATING TRUE TRAJECTORY ##########
@@ -45,8 +45,8 @@ for radar in radars:
     radar.add_noise()
 
 # Combine measurements from all radars
-noisy_traj = RadarCombineMeasurements.combine_radar_measurements(radars, true_traj)
-RadarCombineMeasurements.write_to_file(output_path, noisy_traj)
+noisy_traj = RadarCombineMeasurements.combine_radar_measurements_3d(radars, true_traj)
+RadarCombineMeasurements.write_to_file_3d(output_path, noisy_traj)
 
 # Load radar data from the noisy radar measurements file
 measurement_times = []
@@ -54,35 +54,39 @@ measurements = []
 
 with open(output_path, 'r') as f:
     for line in f:
-        t_str, r_str, theta_str = line.strip().split()
+        t_str, r_str, theta_str, phi_str = line.strip().split()
         t = float(t_str)
         r = float(r_str)
         theta = float(theta_str)
+        phi = float(phi_str)
         measurement_times.append(t)
-        measurements.append(np.array([r, theta]))
+        measurements.append(np.array([r, theta, phi]))
 
 ########## TRAJECTORY PREDICTIONS WITH EXTENDED KALMAN FILTER ##########
 # Measurement model
 H = np.array([
-    [1, 0, 0, 0],
-    [0, 0, 1, 0]
+    [1, 0, 0, 0, 0, 0],
+    [0, 0, 1, 0, 0, 0],
+    [0, 0, 0, 0, 1, 0]
 ])
 
 # Measurement noise
 sigma_r_meas = 100.0        # m
 sigma_theta_meas = 1e-4   # rad
-R = np.diag([sigma_r_meas**2, sigma_theta_meas**2])
+sigma_phi_meas = 1e-4 # rad
+R = np.diag([sigma_r_meas**2, sigma_theta_meas**2, sigma_phi_meas**2])
 
 # Process noise (initially zero)
-# Q = np.zeros((4, 4))
-Q = np.diag([1000, 0, 1e-7, 0])
+Q = np.diag([1000, 0, 1e-7, 0, 1e-7, 0])
 
 # Initial uncertainty
 P0 = np.diag([
     10.0**2,        # r
     1.0**2,         # vr
     (1e-4)**2,      # theta
-    (1e-4)**2       # omega
+    (1e-4)**2       # vtheta
+    (1e-4)**2,      # phi
+    (1e-4)**2       # vphi
 ])
 
 CD = InitialConditions.dragCoeff
@@ -97,13 +101,13 @@ f_jacobian = lambda x: compute_F_analytic(
     rho_func=rho_func
 )
 
-f_dynamics = lambda x: PolarAccelerations.accelerations(x[0], x[1], x[2], x[3])
-x0 = np.array([rk.r0, 0.0, rk.theta0, np.sqrt(GM / rk.r0) / rk.r0])
+f_dynamics = lambda x: SphericalAccelerations.accelerations(x[0], x[1], x[2], x[3], x[4], x[5])
+x0 = np.array([rk.r0, 0.0, rk.theta0, np.sqrt(GM / rk.r0) / rk.r0], rk.phi0, np.sqrt(GM / rk.r0) / rk.r0])
 
 # Load radar data
 data = np.loadtxt(output_path)
 times = data[:, 0]
-measurements = data[:, 1:3]
+measurements = data[:, 1:5]
 
 ekf = ExtendedKalmanFilter(
     f_dynamics=f_dynamics,
@@ -117,7 +121,7 @@ ekf = ExtendedKalmanFilter(
 )
 
 input_file = input_path
-output_file = "ekf_predicted_trajectory.txt"
+output_file = "ekf_predicted_trajectory_3d.txt"
 
 states = []
 covariances = []
@@ -153,9 +157,11 @@ with open(output_file, 'w') as f:
     for t, x, P, measured in zip(times, states, covariances, is_measured_flags):
         r = x[0]
         theta = x[2]
+        phi = x[4]
         r_uncertainty = np.sqrt(P[0, 0])
         theta_uncertainty = np.sqrt(P[2, 2])
-        f.write(f"{t:.6f} {r:.6f} {theta:.8f} {r_uncertainty:.6f} {theta_uncertainty:.8f} {int(measured)}\n")
+        phi_uncertainty = np.sqrt(P[4, 4])
+        f.write(f"{t:.6f} {r:.6f} {theta:.8f} {phi:.8f} {r_uncertainty:.6f} {theta_uncertainty:.8f} {phi_uncertainty:.8f} {int(measured)}\n")
 
-vis = Visualiser2D(input_file, output_file, mode='prewritten')
+vis = Visualiser3D(input_file, output_file, mode='prewritten')
 vis.visualise()

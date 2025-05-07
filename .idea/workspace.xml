@@ -6,9 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="fe963f24-9a54-4832-9b6d-c0a8cc3c9355" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Visualiser.py" beforeDir="false" afterPath="$PROJECT_DIR$/Visualiser.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ekf_predicted_trajectory.txt" beforeDir="false" afterPath="$PROJECT_DIR$/ekf_predicted_trajectory.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/noisy_radar_data.txt" beforeDir="false" afterPath="$PROJECT_DIR$/noisy_radar_data.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ExtendedSolution.py" beforeDir="false" afterPath="$PROJECT_DIR$/ExtendedSolution.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -62,6 +60,7 @@
     "Python.Visualiser.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "Development",
     "ignore.virus.scanning.warn.message": "true",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -148,40 +147,6 @@
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <method v="2" />
     </configuration>
-    <configuration default="true" type="docs" factoryName="Docutils task">
-      <module name="RHESSI" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="docutils_input_file" value="" />
-      <option name="docutils_output_file" value="" />
-      <option name="docutils_params" value="" />
-      <option name="docutils_task" value="" />
-      <option name="docutils_open_in_browser" value="false" />
-      <method v="2" />
-    </configuration>
-    <configuration default="true" type="docs" factoryName="Sphinx task">
-      <module name="RHESSI" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="docutils_input_file" value="" />
-      <option name="docutils_output_file" value="" />
-      <option name="docutils_params" value="" />
-      <option name="docutils_task" value="" />
-      <option name="docutils_open_in_browser" value="false" />
-      <method v="2" />
-    </configuration>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
@@ -206,6 +171,7 @@
       <workItem from="1746478060593" duration="2077000" />
       <workItem from="1746480710720" duration="789000" />
       <workItem from="1746533005893" duration="1280000" />
+      <workItem from="1746609638971" duration="1415000" />
     </task>
     <task id="LOCAL-00001" summary="Moved to seperate folder to keep neat when testing">
       <option name="closed" value="true" />
