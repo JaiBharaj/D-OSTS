@@ -121,8 +121,9 @@ ekf = ExtendedKalmanFilter(
     R=R,
     x0=x0,
     P0=P0,
-    integrator=RK45Integrator_3D(CD, A, m, GM, rho_func)
+    integrator=Integrator3D(CD, A, m, GM, rho_func)
 )
+
 
 input_file = input_path
 output_file = "ekf_predicted_trajectory_3d.txt"
