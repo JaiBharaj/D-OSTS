@@ -6,7 +6,7 @@ from RadarClassNew import Radar
 from RadarDistribution import distribute_radars3D
 from CoordinateTransformations import SphericalAccelerations
 from NumericalIntegrator import Integrator
-from ExtendedKalmanFilters import ExtendedKalmanFilter, compute_F_analytic
+from ExtendedKalmanFilters import ExtendedKalmanFilter, compute_F_spherical
 from Visualiser import Visualiser3D
 from PredictorIntegrator import RK45Integrator_3D
 
