@@ -163,7 +163,7 @@ class Integrator:
                     f.write(f"{t:.3f} {xi:.3f} {yi:.3f} {zi:.3f}\n")
             else:
                 for t, r, ph, la in zip(t_arr, r_arr, phi_arr, lam_arr):
-                    f.write(f"{t:.3f} {r:.3f} {ph:.6f} {la:.6f}\n")
+                    f.write(f"{t:.3f} {r:.3f} {la:.6f} {ph:.6f}\n")
 
         print(f"Wrote {len(t_arr)} points to {fname}")
 
