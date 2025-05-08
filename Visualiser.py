@@ -1,10 +1,11 @@
 import time
+import os
 import numpy as np
 import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-from matplotlib.patches import Polygon
+from matplotlib.patches import Polygon, Wedge
 from CrudeInitialConditions import InitialConditions
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import threading
@@ -12,11 +13,12 @@ from queue import Queue, Empty
 from collections import deque
 
 class Visualiser2D:
-    def __init__(self, trajectory_file_path, prediction_file_path, break_point=0, mode='prewritten'):
+    def __init__(self, trajectory_file_path, prediction_file_path, heatmap_file_map, break_point=0, mode='prewritten'):
         # Initialise parameters
         self.earth_radius = InitialConditions.earthRadius
         self.stop_distance = self.earth_radius + break_point
         self.initial_altitude = InitialConditions.initSatAlt
+        self.current_predict_t = 0.0
         self.focus_target = 'true'  # or 'predicted'
         self.zoom_factor = 1.0  # 1.0 is default, <1 is zoom in, >1 is zoom out
         self.mode = mode
@@ -24,6 +26,7 @@ class Visualiser2D:
         # File paths
         self.TRAJECTORY_FILE = trajectory_file_path
         self.PREDICTION_FILE = prediction_file_path
+        self.HEATMAP_FILE = heatmap_file_map
 
         # Data storage
         self.trajectory = []
@@ -32,6 +35,9 @@ class Visualiser2D:
         self.position_queue = Queue()
         self.prediction_queue = Queue()
         self.uncertainty_polygon = None
+        self.crash_heatmap = None
+        self.num_heatmap_bins = 36  # 10° per bin
+        self.heatmap_file = "crash_angles.txt"
 
         # Setup figure
         self.setup_plots()
@@ -150,7 +156,8 @@ class Visualiser2D:
             if self.mode == 'prewritten':
                 for line in f:
                     try:
-                        _, r, theta, dr, dtheta, is_meas = map(float, line.strip().split())
+                        t_pred, r, theta, dr, dtheta, is_meas = map(float, line.strip().split())
+                        self.current_predict_t = t_pred
                         x = r * np.cos(theta)
                         y = r * np.sin(theta)
                         std_x = np.sqrt((dr * np.cos(theta)) ** 2 + (r * dtheta * np.sin(theta)) ** 2)
@@ -168,7 +175,8 @@ class Visualiser2D:
                         # time.sleep(0.01)
                         continue
                     try:
-                        _, r, theta, dr, dtheta, is_meas = map(float, line.strip().split())
+                        t_pred, r, theta, dr, dtheta, is_meas = map(float, line.strip().split())
+                        self.current_predict_t = t_pred
                         x = r * np.cos(theta)
                         y = r * np.sin(theta)
                         std_x = np.sqrt((dr * np.cos(theta)) ** 2 + (r * dtheta * np.sin(theta)) ** 2)
@@ -327,6 +335,41 @@ class Visualiser2D:
                 meas_xs = [x for x, flag in zip(pred_xs, meas_flags) if flag]
                 meas_ys = [y for y, flag in zip(pred_ys, meas_flags) if flag]
                 self.pred_measurements_zoom.set_data(meas_xs, meas_ys)
+
+            # Update crash-site heatmap
+            if os.path.exists(self.HEATMAP_FILE):
+                with open(self.HEATMAP_FILE, 'r') as f:
+                    angles = []
+                    for line in f:
+                        parts = line.strip().split()
+                        angles.extend(float(p) % (2 * np.pi) for p in parts[1:] if p)
+
+                if float(parts[0]) == self.current_predict_t:
+                    if angles:
+                        bin_counts, bin_edges = np.histogram(angles, bins=self.num_heatmap_bins, range=(0, 2 * np.pi))
+                        bin_angles = (bin_edges[:-1] + bin_edges[1:]) / 2
+                        max_count = bin_counts.max() or 1
+
+                        if self.crash_heatmap is not None:
+                            for patch in self.crash_heatmap:
+                                patch.remove()
+                        self.crash_heatmap = []
+
+                        for count, angle in zip(bin_counts, bin_angles):
+                            alpha = count / max_count
+                            wedge = Wedge(
+                                center=(0, 0),
+                                r=self.earth_radius * 1.05,
+                                theta1=np.degrees(angle - np.pi / self.num_heatmap_bins),
+                                theta2=np.degrees(angle + np.pi / self.num_heatmap_bins),
+                                width=0.02 * self.earth_radius,
+                                facecolor='orange',
+                                alpha=alpha,
+                                zorder=1.5
+                            )
+                            self.ax_full.add_patch(wedge)
+                            self.crash_heatmap.append(wedge)
+                            artists.append(wedge)
 
         except Exception as e:
             print(f"Animation error: {e}")

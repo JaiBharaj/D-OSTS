@@ -1,6 +1,7 @@
 import numpy as np
-from CrudeInitialConditions import InitialConditions
+import matplotlib.pyplot as plt
 import RadarCombineMeasurements
+from CrudeInitialConditions import InitialConditions
 from Atmospheric_Density import atmos_ussa1976_rho
 from RadarClassNew import Radar
 from RadarDistribution import distribute_radars2D
@@ -119,12 +120,14 @@ ekf = ExtendedKalmanFilter(
 )
 
 ########## EKF LOOP ##########
+crash_file_path = "crash_heatmap_data.txt"
+
 data = np.loadtxt(output_path)
 measurement_times = data[:, 0]
 measurements = data[:, 1:3]
 
 states, covariances, times, is_measured_flags = [], [], [], []
-crash_means, crash_stds = [], []
+crash_times, crash_means, crash_stds = [], [], []
 
 for i, (t, z) in enumerate(zip(measurement_times, measurements)):
     dt = 1e-3 if i == 0 else t - measurement_times[i - 1]
@@ -141,7 +144,7 @@ for i, (t, z) in enumerate(zip(measurement_times, measurements)):
     is_measured_flags.append(is_measured)
 
     if i % 1000 == 0:
-        crash_angles = ekf.crash(N=10, max_steps=5000)
+        crash_angles = ekf.crash(crash_file_path, N=10, t_out=t, dt=dt, max_steps=5000)
         print(i)
         crash_means.append(np.mean(crash_angles))
         crash_stds.append(np.std(crash_angles))
@@ -168,5 +171,5 @@ if crash_means:
     plt.grid()
     plt.show()
 
-vis = Visualiser2D(input_path, "ekf_predicted_trajectory.txt", mode='prewritten')
+vis = Visualiser2D("trajectory_without_noise.txt", "ekf_predicted_trajectory.txt", "crash_heatmap_data.txt", mode='prewritten')
 vis.visualise()

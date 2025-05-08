@@ -68,7 +68,7 @@ class ExtendedKalmanFilter:
                  + K @ self.R @ K.T
 
         return self.x, self.P
-    
+
     def crash(self, N=100, dt=1.0, max_steps=10000):
         """
         Monte Carlo prediction of crash impact angle (theta) using N samples.
@@ -94,7 +94,7 @@ class ExtendedKalmanFilter:
         else:
             print("No crashes recorded.")
         return crash_angles
-        
+
 
 def compute_F_analytic(x, CD, A, m, GM, rho_func):
     """
