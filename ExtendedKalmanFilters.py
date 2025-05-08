@@ -46,8 +46,7 @@ class ExtendedKalmanFilter:
         F_disc = self.integrator.transition_matrix(self.x, dt)
 
         # 3: covariance propagation
-        Q_scaled = self.Q * dt # Fixes exploding due to small timesteps
-        self.P = F_disc @ self.P @ F_disc.T + Q_scaled
+        self.P = F_disc @ self.P @ F_disc.T + self.Q
         return self.x, self.P
 
 
@@ -69,6 +68,33 @@ class ExtendedKalmanFilter:
                  + K @ self.R @ K.T
 
         return self.x, self.P
+    
+    def crash(self, N=100, dt=1.0, max_steps=10000):
+        """
+        Monte Carlo prediction of crash impact angle (theta) using N samples.
+        """
+        crash_angles = []
+        for j in range(N):
+            sample = np.random.multivariate_normal(self.x, self.P)
+            t = 0.0
+            steps = 0
+            while sample[0] > InitialConditions.earthRadius and steps < max_steps:
+                sample = self.integrator.step(self.f, sample, dt)
+                t += dt
+                steps += 1
+            if steps >= max_steps:
+                print(f"[MC {j}] max_steps reached without crash.")
+                continue
+            crash_angles.append(sample[2])
+            print(f"[MC {j}] crash at θ = {sample[2]:.6f} after {steps} steps")
+
+        crash_angles = np.array(crash_angles)
+        if len(crash_angles) > 0:
+            print(f"Crash θ mean ± std: {np.mean(crash_angles):.6f} ± {np.std(crash_angles):.6f}")
+        else:
+            print("No crashes recorded.")
+        return crash_angles
+        
 
 def compute_F_analytic(x, CD, A, m, GM, rho_func):
     """
@@ -195,19 +221,6 @@ def compute_F_spherical(x, CD, A, m, GM, rho_func):
              - D * omega_phi * dv[2]
     
     return F
-
-def estimate_crash_site(x, P, integrator, f_dynamics, N=100):
-    crash_angles = []
-    for _ in range(N):
-        sample = np.random.multivariate_normal(x, P)
-        t = 0.0
-        dt = 1.0
-        while sample[0] > InitialConditions.earthRadius:
-            sample = integrator.step(f_dynamics, sample, dt)
-            t += dt
-        crash_angles.append(sample[2])  # θ at impact
-    crash_angles = np.array(crash_angles)
-    return np.mean(crash_angles), np.std(crash_angles)
 
 """
 Usage:
