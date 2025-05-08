@@ -132,7 +132,7 @@ x0 = np.array([rk.r0,
 
 # Load radar data
 data = np.loadtxt(output_path)
-times = data[:, 0]
+# times = data[:, 0]
 measurements = data[:, 1:5]
 
 ekf = ExtendedKalmanFilter(

@@ -17,6 +17,8 @@ class Visualiser2D:
         self.earth_radius = InitialConditions.earthRadius
         self.stop_distance = self.earth_radius + break_point
         self.initial_altitude = InitialConditions.initSatAlt
+        self.focus_target = 'true'  # or 'predicted'
+        self.zoom_factor = 1.0  # 1.0 is default, <1 is zoom in, >1 is zoom out
         self.mode = mode
 
         # File paths
@@ -33,6 +35,7 @@ class Visualiser2D:
 
         # Setup figure
         self.setup_plots()
+        self.fig.canvas.mpl_connect('key_press_event', self.on_key_press)
 
     def setup_plots(self):
         # Plot layout
@@ -99,6 +102,20 @@ class Visualiser2D:
             label_x = self.earth_radius * 0.85 * np.cos(angle_rad)
             label_y = self.earth_radius * 0.85 * np.sin(angle_rad)
             ax.text(label_x, label_y, f'{int(angle_deg)}°', color='black', ha='center', va='center', fontsize=10)
+
+    def on_key_press(self, event):
+        if event.key == 't':
+            self.focus_target = 'true'
+            print("Focusing on true trajectory")
+        elif event.key == 'p':
+            self.focus_target = 'predicted'
+            print("Focusing on predicted trajectory")
+        elif event.key in ['+', 'up']:
+            self.zoom_factor *= 0.9  # Zoom in
+            print(f"Zoom factor: {self.zoom_factor:.2f}")
+        elif event.key in ['-', 'down']:
+            self.zoom_factor *= 1.1  # Zoom out
+            print(f"Zoom factor: {self.zoom_factor:.2f}")
 
     def read_next_position(self):
         with open(self.TRAJECTORY_FILE, 'r') as f:
@@ -215,9 +232,19 @@ class Visualiser2D:
                 self.satellite_dot_zoom.set_data([x], [y])
 
                 current_dist = np.hypot(x, y)
-                zoom_width = max(500000, current_dist / 3)
-                self.ax_zoom.set_xlim(x - zoom_width / 6, x + zoom_width / 6)
-                self.ax_zoom.set_ylim(y - zoom_width / 6, y + zoom_width / 6)
+                focus = None
+                if self.focus_target == 'true' and self.trajectory:
+                    focus = self.trajectory[-1]
+                elif self.focus_target == 'predicted' and self.predictions:
+                    focus = (self.predictions[-1][0], self.predictions[-1][1])
+
+                if focus:
+                    fx, fy = focus
+                    dist = np.hypot(fx, fy)
+                    base_width = max(500000, dist / 3)
+                    zoom_width = base_width * self.zoom_factor
+                    self.ax_zoom.set_xlim(fx - zoom_width / 6, fx + zoom_width / 6)
+                    self.ax_zoom.set_ylim(fy - zoom_width / 6, fy + zoom_width / 6)
 
                 altitude = current_dist - self.earth_radius
                 self.altitude_text.set_text(f"Altitude: {altitude / 1000:.1f} km\n"
@@ -332,6 +359,9 @@ class Visualiser3D:
         self.user_controlled = False
         self.last_azim = None
         self.last_elev = None
+        self.focus_on = 'true'  # Options: 'true' or 'predicted'
+        self.zoom_scale = 1.0  # This is used in the update method
+        self.zoom_factor = 1.0  # This is what your key handler modifies
         self.mode = mode
 
         def on_draw(event):
@@ -359,6 +389,7 @@ class Visualiser3D:
         # Setup figure
         self.setup_plots()
         self.ax_zoom.figure.canvas.mpl_connect('draw_event', on_draw)
+        self.fig.canvas.mpl_connect('key_press_event', self.on_key_press)
 
     def setup_plots(self):
         # Create 3D figure with two subplots
@@ -460,6 +491,23 @@ class Visualiser3D:
             x = r * 1.05
             y = 0
             ax.text(x, y, z, f'{lat}°', color='black', fontsize=8, ha='center', va='center')
+
+    def on_key_press(self, event):
+        if event.key == 't':
+            self.focus_on = 'true'  # Fixed variable name (was focus_target)
+            print("Focusing on true trajectory")
+        elif event.key == 'p':
+            self.focus_on = 'predicted'  # Fixed variable name (was focus_target)
+            print("Focusing on predicted trajectory")
+        elif event.key in ['+', 'up']:
+            self.zoom_factor *= 0.9  # Zoom in
+            print(f"Zoom factor: {self.zoom_factor:.2f}")
+        elif event.key in ['-', 'down']:
+            self.zoom_factor *= 1.1  # Zoom out
+            print(f"Zoom factor: {self.zoom_factor:.2f}")
+        # Update zoom_scale with zoom_factor
+        self.zoom_scale = self.zoom_factor
+        self.fig.canvas.draw_idle()  # Force redraw
 
     def read_next_position(self):
         with open(self.TRAJECTORY_FILE, 'r') as f:
@@ -585,7 +633,8 @@ class Visualiser3D:
     def update(self, frame):
         artists = [self.trajectory_line_full, self.satellite_dot_full,
                    self.trajectory_line_zoom, self.satellite_dot_zoom,
-                   self.pred_line_full, self.pred_line_zoom,
+                   self.pred_line_full, self.pred_dot_full,
+                   self.pred_line_zoom, self.pred_dot_zoom,
                    self.pred_measurements_zoom, self.altitude_text]
 
         try:
@@ -593,89 +642,114 @@ class Visualiser3D:
                 current_pos = self.new_position
                 current_pred = self.new_prediction
 
+            # Update true trajectory
             if current_pos:
                 x, y, z = current_pos
                 self.trajectory.append((x, y, z))
-                xs, ys, zs = zip(*self.trajectory) if len(self.trajectory) > 1 else ([x], [y], [z])
 
+                # Convert trajectory to plottable arrays
+                if len(self.trajectory) > 1:
+                    xs, ys, zs = zip(*self.trajectory)
+                else:
+                    xs, ys, zs = [x], [y], [z]
+
+                # Update true trajectory plots
                 self.trajectory_line_full.set_data_3d(xs, ys, zs)
                 self.satellite_dot_full.set_data_3d([x], [y], [z])
                 self.trajectory_line_zoom.set_data_3d(xs, ys, zs)
                 self.satellite_dot_zoom.set_data_3d([x], [y], [z])
 
                 current_dist = np.sqrt(x ** 2 + y ** 2 + z ** 2)
-                zoom_width = max(500000, current_dist / 3)
-
-                # Camera angle auto-update if not overridden by user
-                if not self.user_controlled:
-                    if len(self.trajectory) >= 2:
-                        (x0, y0, z0), (x1, y1, z1) = self.trajectory[-2], self.trajectory[-1]
-                        dx, dy, dz = x1 - x0, y1 - y0, z1 - z0
-                        norm = np.linalg.norm([dx, dy, dz])
-                        if norm > 0:
-                            dx, dy, dz = dx / norm, dy / norm, dz / norm
-                            azim = (np.degrees(np.arctan2(dy, dx)) + 180) % 360
-                            elev = 20
-                            self.ax_zoom.view_init(elev=elev, azim=azim)
-                    else:
-                        elev_angle = np.degrees(np.arctan2(z, np.sqrt(x ** 2 + y ** 2)))
-                        azim_angle = np.degrees(np.arctan2(y, x))
-                        self.ax_zoom.view_init(elev=elev_angle, azim=azim_angle)
-
-                # Always update zoom box to follow satellite
-                self.ax_zoom.set_xlim(x - zoom_width / 4, x + zoom_width / 4)
-                self.ax_zoom.set_ylim(y - zoom_width / 4, y + zoom_width / 4)
-                self.ax_zoom.set_zlim(z - zoom_width / 4, z + zoom_width / 4)
-
                 altitude = current_dist - self.earth_radius
-                self.altitude_text.set_text(f"Altitude: {altitude / 1000:.1f} km\n"
-                                            f"Distance: {current_dist / 1000:.1f} km\n"
-                                            f"Position: ({x / 1000:.1f}, {y / 1000:.1f}, {z / 1000:.1f}) km")
 
+                # Update camera view if not user-controlled
+                if not self.user_controlled and len(self.trajectory) >= 2:
+                    # Get last two positions to determine direction
+                    (x_prev, y_prev, z_prev), (x_curr, y_curr, z_curr) = self.trajectory[-2], self.trajectory[-1]
+                    dx, dy, dz = x_curr - x_prev, y_curr - y_prev, z_curr - z_prev
+
+                    # Calculate azimuth and elevation from velocity vector
+                    azim = np.degrees(np.arctan2(dy, dx))
+                    elev = np.degrees(np.arctan2(dz, np.sqrt(dx ** 2 + dy ** 2)))
+                    self.ax_zoom.view_init(elev=elev, azim=azim)
+
+                # Update prediction visualization
+                if current_pred:
+                    pred_x, pred_y, pred_z, std_x, std_y, std_z, is_meas = current_pred
+                    self.predictions.append((pred_x, pred_y, pred_z, std_x, std_y, std_z, is_meas))
+
+                    if len(self.predictions) > 1:
+                        # Extract prediction points and uncertainties
+                        pred_points = np.array([(x, y, z) for x, y, z, _, _, _, _ in self.predictions])
+                        pred_xs, pred_ys, pred_zs = pred_points.T
+                        std_devs = [(sx, sy, sz) for _, _, _, sx, sy, sz, _ in self.predictions]
+                        meas_flags = [m for _, _, _, _, _, _, m in self.predictions]
+
+                        # Update prediction lines and dots
+                        self.pred_line_full.set_data_3d(pred_xs, pred_ys, pred_zs)
+                        self.pred_dot_full.set_data_3d([pred_x], [pred_y], [pred_z])
+                        self.pred_line_zoom.set_data_3d(pred_xs, pred_ys, pred_zs)
+                        self.pred_dot_zoom.set_data_3d([pred_x], [pred_y], [pred_z])
+
+                        # Update uncertainty visualization
+                        if hasattr(self, 'uncertainty_tube'):
+                            self.uncertainty_tube.remove()
+
+                        vertices, faces = self.create_uncertainty_tube(pred_points, std_devs)
+                        vertices = np.array(vertices)
+                        self.uncertainty_tube = Poly3DCollection(
+                            [vertices[face] for face in faces],
+                            alpha=0.15,
+                            color='blue',
+                            linewidths=0.5,
+                            edgecolor='blue'
+                        )
+                        self.ax_zoom.add_collection3d(self.uncertainty_tube)
+                        artists.append(self.uncertainty_tube)
+
+                        # Update measurement points
+                        if any(meas_flags):
+                            meas_points = pred_points[np.array(meas_flags, dtype=bool)]
+                            meas_xs, meas_ys, meas_zs = meas_points.T
+                            self.pred_measurements_zoom.set_data_3d(meas_xs, meas_ys, meas_zs)
+
+                # Update zoomed view limits
+                focus_point = None
+                if self.focus_on == 'true' and self.trajectory:
+                    focus_point = self.trajectory[-1]
+                elif self.focus_on == 'predicted' and self.predictions:
+                    focus_point = (self.predictions[-1][0], self.predictions[-1][1], self.predictions[-1][2])
+
+                if focus_point:
+                    fx, fy, fz = focus_point
+                    base_width = max(500000, np.sqrt(fx ** 2 + fy ** 2 + fz ** 2) / 3)
+                    zoom_width = base_width * self.zoom_scale
+
+                    self.ax_zoom.set_xlim(fx - zoom_width / 2, fx + zoom_width / 2)
+                    self.ax_zoom.set_ylim(fy - zoom_width / 2, fy + zoom_width / 2)
+                    self.ax_zoom.set_zlim(fz - zoom_width / 2, fz + zoom_width / 2)
+
+                # Update altitude text
+                self.altitude_text.set_text(
+                    f"Altitude: {altitude / 1000:.1f} km\n"
+                    f"Distance: {current_dist / 1000:.1f} km\n"
+                    f"Position: ({x / 1000:.1f}, {y / 1000:.1f}, {z / 1000:.1f}) km"
+                )
+
+                # Check for impact
                 if current_dist <= self.stop_distance:
                     self.ani.event_source.stop()
-                    self.altitude_text.set_text(f"IMPACT!\n"
-                                                f"Final altitude: {altitude:.1f} m\n"
-                                                f"Final Position: ({x / 1000:.1f}, {y / 1000:.1f}, {z / 1000:.1f}) km")
-                    return artists
-
-            if current_pred:
-                pred_x, pred_y, pred_z, std_x, std_y, std_z, is_meas = current_pred
-                self.predictions.append((pred_x, pred_y, pred_z, std_x, std_y, std_z, is_meas))
-
-                if len(self.predictions) > 1:
-                    pred_points = np.array([(x, y, z) for x, y, z, _, _, _, _ in self.predictions])
-                    pred_xs, pred_ys, pred_zs = pred_points.T
-                    std_devs = [(sx, sy, sz) for _, _, _, sx, sy, sz, _ in self.predictions]
-                    meas_flags = [m for _, _, _, _, _, _, m in self.predictions]
-
-                    self.pred_line_full.set_data_3d(pred_xs, pred_ys, pred_zs)
-                    self.pred_dot_full.set_data_3d([pred_x], [pred_y], [pred_z])
-                    self.pred_line_zoom.set_data_3d(pred_xs, pred_ys, pred_zs)
-                    self.pred_dot_zoom.set_data_3d([pred_x], [pred_y], [pred_z])
-
-                    if hasattr(self, 'uncertainty_tube'):
-                        self.uncertainty_tube.remove()
-
-                    vertices, faces = self.create_uncertainty_tube(pred_points, std_devs)
-                    vertices = np.array(vertices)
-                    self.uncertainty_tube = Poly3DCollection(
-                        [vertices[face_idx] for face_idx in faces],
-                        alpha=0.15,
-                        color='blue',
-                        linewidths=0.5,
-                        edgecolor='blue'
+                    self.altitude_text.set_text(
+                        f"IMPACT!\n"
+                        f"Final altitude: {altitude:.1f} m\n"
+                        f"Final Position: ({x / 1000:.1f}, {y / 1000:.1f}, {z / 1000:.1f}) km"
                     )
-                    self.ax_zoom.add_collection3d(self.uncertainty_tube)
-                    artists.append(self.uncertainty_tube)
-
-                    meas_points = pred_points[np.array(meas_flags, dtype=bool)]
-                    if len(meas_points) > 0:
-                        meas_xs, meas_ys, meas_zs = meas_points.T
-                        self.pred_measurements_zoom.set_data_3d(meas_xs, meas_ys, meas_zs)
+                    return artists
 
         except Exception as e:
             print(f"Animation error: {e}")
+            import traceback
+            traceback.print_exc()
 
         return artists
 
