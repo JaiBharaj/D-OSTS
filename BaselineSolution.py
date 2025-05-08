@@ -10,6 +10,7 @@ from NumericalIntegrator import Integrator
 from ExtendedKalmanFilters import ExtendedKalmanFilter, compute_F_analytic
 from Visualiser import Visualiser2D
 from PredictorIntegrator import RK45Integrator
+import matplotlib.pyplot as plt
 
 ########## GENERATING TRUE TRAJECTORY ##########
 rk = Integrator()
