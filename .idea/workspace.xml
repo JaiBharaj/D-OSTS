@@ -6,7 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="fe963f24-9a54-4832-9b6d-c0a8cc3c9355" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Visualiser.py" beforeDir="false" afterPath="$PROJECT_DIR$/Visualiser.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -100,7 +99,7 @@
       <workItem from="1746480710720" duration="789000" />
       <workItem from="1746533005893" duration="1280000" />
       <workItem from="1746609638971" duration="2536000" />
-      <workItem from="1746635869846" duration="9844000" />
+      <workItem from="1746635869846" duration="10174000" />
     </task>
     <task id="LOCAL-00001" summary="Moved to seperate folder to keep neat when testing">
       <option name="closed" value="true" />
