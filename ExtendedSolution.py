@@ -76,9 +76,29 @@ sigma_theta_meas = 1e-4   # rad
 sigma_phi_meas = 1e-4 # rad
 R = np.diag([sigma_r_meas**2, sigma_theta_meas**2, sigma_phi_meas**2])
 
-# Process noise (initially zero)
-Q = np.diag([1000, 0, 1e-7, 0, 1e-7, 0])
+# Process noise
+# Q = np.diag([1000, 0, 1e-7, 0, 1e-7, 0])
 # Q = np.diag([10000, 0, 0, 0, 0, 0])
+# Standard deviations for position components
+sig_r   = 1000          # meters
+sig_theta   = 1e-4      # radians
+sig_phi   = 1e-4        # radians
+sig_theta_phi  = 0.5    # correlation between theta and phi
+
+# Covariances
+cov_theta_phi = sig_theta_phi * sig_theta * sig_phi
+
+# Initialise full 6x6 process noise matrix
+Q = np.zeros((6, 6))
+
+# Position noise variances
+Q[0, 0] = sig_r         # r
+Q[2, 2] = sig_theta**2  # theta
+Q[4, 4] = sig_phi**2    # phi
+
+# Coupling between theta and phi
+Q[2, 4] = cov_theta_phi
+Q[4, 2] = cov_theta_phi
 
 # Initial uncertainty
 P0 = np.diag([
