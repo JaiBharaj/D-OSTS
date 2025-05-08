@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from CrudeInitialConditions import InitialConditions
 import RadarCombineMeasurements
 from Atmospheric_Density import atmos_ussa1976_rho
@@ -10,162 +11,75 @@ from ExtendedKalmanFilters import ExtendedKalmanFilter, compute_F_spherical
 from Visualiser import Visualiser3D
 from PredictorIntegrator import Integrator3D
 
-########## GENERATING TRUE TRAJECTORY ##########
+########## TRUE TRAJECTORY ##########
 rk = Integrator()
 rk.get_trajectory_3d()
 
-########## RADAR STATION NOISY MEASUREMENTS ##########
+########## RADAR SIMULATION ##########
 input_path = "trajectory_without_noise_3d.txt"
 output_path = "noisy_radar_data_3d.txt"
 
-H_dark = 100000  # Radar min altitude (m)
+H_dark = 100000
 radar_positions = distribute_radars3D(H_dark, InitialConditions.earthRadius)
-radars = []
+radars = [Radar(mode='3d', ID=f"Radar_{i}", location=pos) for i, pos in enumerate(radar_positions)]
 
-# Initialise radar stations
-for i, (r_radar, theta_radar, phi_radar) in enumerate(radar_positions):
-    radar = Radar(
-        mode='3d',
-        ID=f"Radar_{i}",
-        location=[r_radar, theta_radar, phi_radar]
-    )
-    radars.append(radar)
-
-# Load true trajectory
-true_traj = np.loadtxt(input_path)  # Columns: time, r, theta
-
-# Record satellite positions in each radar
+true_traj = np.loadtxt(input_path)
 for time, r, theta, phi in true_traj:
-    sat_pos = [r, theta, phi]
     for radar in radars:
-        radar.record_satellite(time, sat_pos)
-
-# Add measurement noise
+        radar.record_satellite(time, [r, theta, phi])
 for radar in radars:
     radar.add_noise()
 
-# Combine measurements from all radars
 noisy_traj = RadarCombineMeasurements.combine_radar_measurements_3d(radars, true_traj)
 RadarCombineMeasurements.write_to_file_3d(output_path, noisy_traj)
 
-# Load radar data from the noisy radar measurements file
-measurement_times = []
-measurements = []
-
-with open(output_path, 'r') as f:
-    for line in f:
-        t_str, r_str, theta_str, phi_str = line.strip().split()
-        t = float(t_str)
-        r = float(r_str)
-        theta = float(theta_str)
-        phi = float(phi_str)
-        measurement_times.append(t)
-        measurements.append(np.array([r, theta, phi]))
-
-########## TRAJECTORY PREDICTIONS WITH EXTENDED KALMAN FILTER ##########
-# Measurement model
+########## EKF SETUP ##########
 H = np.array([
     [1, 0, 0, 0, 0, 0],
     [0, 0, 1, 0, 0, 0],
     [0, 0, 0, 0, 1, 0]
 ])
-
-# Measurement noise
-sigma_r_meas = 100.0        # m
-sigma_theta_meas = 1e-4   # rad
-sigma_phi_meas = 1e-4 # rad
-R = np.diag([sigma_r_meas**2, sigma_theta_meas**2, sigma_phi_meas**2])
-
-# Process noise
-# Q = np.diag([1000, 0, 1e-7, 0, 1e-7, 0])
-# Q = np.diag([10000, 0, 0, 0, 0, 0])
-# Standard deviations for position components
-sig_r   = 100           # meters
-sig_theta   = 1e-4      # radians
-sig_phi   = 1e-4        # radians
-sig_theta_phi  = 0.5    # correlation between theta and phi
-
-# Covariances
-cov_theta_phi = sig_theta_phi * sig_theta * sig_phi
-
-# Initialise full 6x6 process noise matrix
+R = np.diag([100.0**2, 1e-4**2, 1e-4**2])
 Q = np.zeros((6, 6))
+Q[0, 0] = 100**2
+Q[2, 2] = 1e-4**2
+Q[4, 4] = 1e-4**2
+Q[2, 4] = Q[4, 2] = 0.5 * 1e-4**2
 
-# Position noise variances
-Q[0, 0] = sig_r         # r
-Q[2, 2] = sig_theta**2  # theta
-Q[4, 4] = sig_phi**2    # phi
-
-# Coupling between theta and phi
-Q[2, 4] = cov_theta_phi
-Q[4, 2] = cov_theta_phi
-
-# Initial uncertainty
-P0 = np.diag([
-    10.0**2,        # r
-    1.0**2,         # vr
-    (1e-4)**2,      # theta
-    (1e-4)**2,       # vtheta
-    (1e-4)**2,      # phi
-    (1e-4)**2       # vphi
-])
-
-CD = InitialConditions.dragCoeff
-A = InitialConditions.crossSec
-m = InitialConditions.satMass
+P0 = np.diag([100.0, 1.0, 1e-8, 1e-8, 1e-8, 1e-8])
+CD, A, m = InitialConditions.dragCoeff, InitialConditions.crossSec, InitialConditions.satMass
 GM = InitialConditions.gravConstant * InitialConditions.earthMass
-
 rho_func = lambda r: atmos_ussa1976_rho(r - InitialConditions.earthRadius)
+f_jacobian = lambda x: compute_F_spherical(x, CD, A, m, GM, rho_func)
+f_dynamics = lambda x: SphericalAccelerations.accelerations(*x)
 
-f_jacobian = lambda x: compute_F_spherical(
-    x, CD, A, m, GM,
-    rho_func=rho_func
-)
-
-f_dynamics = lambda x: SphericalAccelerations.accelerations(x[0], x[1], x[2], x[3], x[4], x[5])
-x0 = np.array([rk.r0, 
+x0 = np.array([rk.r0,
                InitialConditions.initSatRdot,
                InitialConditions.initSatPhi,
                InitialConditions.initSatPhidot,
                InitialConditions.initSatLam,
                rk.lam_dot0])
 
-# Load radar data
-data = np.loadtxt(output_path)
-# times = data[:, 0]
-measurements = data[:, 1:5]
-
 ekf = ExtendedKalmanFilter(
     f_dynamics=f_dynamics,
     f_jacobian=f_jacobian,
-    H=H,
-    Q=Q,
-    R=R,
+    H=H, Q=Q, R=R,
     x0=x0,
     P0=P0,
     integrator=Integrator3D()
 )
 
-input_file = input_path
-output_file = "ekf_predicted_trajectory_3d.txt"
+########## EKF EXECUTION ##########
+data = np.loadtxt(output_path)
+measurement_times = data[:, 0]
+measurements = data[:, 1:4]
 
-states = []
-covariances = []
-times = []
-is_measured_flags = []
+states, covariances, times, is_measured_flags = [], [], [], []
+crash_theta_means, crash_phi_means = [], []
+crash_theta_stds, crash_phi_stds = [], []
 
-x = x0.copy()
-P = P0.copy()
-
-for i in range(len(measurement_times)):
-    t = measurement_times[i]
-    z = measurements[i]
-
-    if i == 0:
-        dt = 1e-3  # Small nonzero dt for first Jacobian estimate
-    else:
-        dt = t - measurement_times[i - 1]
-
+for i, (t, z) in enumerate(zip(measurement_times, measurements)):
+    dt = 1e-3 if i == 0 else t - measurement_times[i - 1]
     x, P = ekf.predict(dt)
 
     is_measured = False
@@ -178,16 +92,59 @@ for i in range(len(measurement_times)):
     covariances.append(P.copy())
     is_measured_flags.append(is_measured)
 
-# Save to file
-with open(output_file, 'w') as f:
-    for t, x, P, measured in zip(times, states, covariances, is_measured_flags):
-        r = x[0]
-        theta = x[2]
-        phi = x[4]
-        r_uncertainty = np.sqrt(P[0, 0])
-        theta_uncertainty = np.sqrt(P[2, 2])
-        phi_uncertainty = np.sqrt(P[4, 4])
-        f.write(f"{t:.6f} {r:.6f} {theta:.8f} {phi:.8f} {r_uncertainty:.6f} {theta_uncertainty:.8f} {phi_uncertainty:.8f} {int(measured)}\n")
+    if i % 500 == 0:
+        samples = ekf.crash3D(N=20, max_steps=10000)
+        if len(samples) > 0:
+            thetas = np.array([s[0] for s in samples])
+            phis   = np.array([s[1] for s in samples])
+            crash_theta_means.append(np.mean(thetas))
+            crash_theta_stds.append(np.std(thetas))
+            crash_phi_means.append(np.mean(phis))
+            crash_phi_stds.append(np.std(phis))
 
-vis = Visualiser3D(input_file, output_file, mode='prewritten')
+
+########## SAVE TRAJECTORY ##########
+with open("ekf_predicted_trajectory_3d.txt", 'w') as f:
+    for t, x, P, measured in zip(times, states, covariances, is_measured_flags):
+        r, theta, phi = x[0], x[2], x[4]
+        f.write(f"{t:.6f} {r:.6f} {theta:.8f} {phi:.8f} "
+                f"{np.sqrt(P[0, 0]):.3f} {np.sqrt(P[2, 2]):.3e} {np.sqrt(P[4, 4]):.3e} {int(measured)}\n")
+
+########## OPTIONAL VISUALISATION ##########
+if crash_theta_means:
+    steps = np.arange(0, len(crash_theta_means)) * 500
+    crash_theta_means = np.array(crash_theta_means)
+    crash_phi_means   = np.array(crash_phi_means)
+    crash_theta_stds  = np.array(crash_theta_stds)
+    crash_phi_stds    = np.array(crash_phi_stds)
+
+    plt.figure(figsize=(12, 6))
+
+    plt.subplot(1, 2, 1)
+    plt.plot(steps, crash_theta_means, label='Mean θ_crash')
+    plt.fill_between(steps, crash_theta_means - crash_theta_stds,
+                             crash_theta_means + crash_theta_stds,
+                     alpha=0.3, label='1σ θ')
+    plt.xlabel('Time Step')
+    plt.ylabel('θ_crash (rad)')
+    plt.title('Crash θ Prediction ± 1σ')
+    plt.legend()
+    plt.grid()
+
+    plt.subplot(1, 2, 2)
+    plt.plot(steps, crash_phi_means, label='Mean φ_crash')
+    plt.fill_between(steps, crash_phi_means - crash_phi_stds,
+                             crash_phi_means + crash_phi_stds,
+                     alpha=0.3, label='1σ φ')
+    plt.xlabel('Time Step')
+    plt.ylabel('φ_crash (rad)')
+    plt.title('Crash φ Prediction ± 1σ')
+    plt.legend()
+    plt.grid()
+
+    plt.tight_layout()
+    plt.show()
+
+
+vis = Visualiser3D(input_path, "ekf_predicted_trajectory_3d.txt", mode='prewritten')
 vis.visualise()
