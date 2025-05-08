@@ -6,9 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="fe963f24-9a54-4832-9b6d-c0a8cc3c9355" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ExtendedSolution.py" beforeDir="false" afterPath="$PROJECT_DIR$/ExtendedSolution.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ekf_predicted_trajectory_3d.txt" beforeDir="false" afterPath="$PROJECT_DIR$/ekf_predicted_trajectory_3d.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/noisy_radar_data_3d.txt" beforeDir="false" afterPath="$PROJECT_DIR$/noisy_radar_data_3d.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -104,7 +101,7 @@
       <workItem from="1746609638971" duration="2536000" />
       <workItem from="1746635869846" duration="10174000" />
       <workItem from="1746697663132" duration="8994000" />
-      <workItem from="1746720102045" duration="759000" />
+      <workItem from="1746720102045" duration="1437000" />
     </task>
     <task id="LOCAL-00001" summary="Moved to seperate folder to keep neat when testing">
       <option name="closed" value="true" />

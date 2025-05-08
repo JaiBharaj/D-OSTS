@@ -46,7 +46,8 @@ class ExtendedKalmanFilter:
         F_disc = self.integrator.transition_matrix(self.x, dt)
 
         # 3: covariance propagation
-        self.P = F_disc @ self.P @ F_disc.T + self.Q
+        Q_scaled = self.Q * dt # Fixes exploding due to small timesteps
+        self.P = F_disc @ self.P @ F_disc.T + Q_scaled
         return self.x, self.P
 
 
