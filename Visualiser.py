@@ -387,8 +387,8 @@ class Visualiser3D:
         z = self.earth_radius * np.outer(np.ones(np.size(u)), np.cos(v))
 
         # Plot Earth in both views
-        self.ax_full.plot_surface(x, y, z, color='blue', alpha=0.3)
-        self.ax_zoom.plot_surface(x, y, z, color='blue', alpha=0.3)
+        self.ax_full.plot_surface(x, y, z, color='gray', alpha=0.3)
+        self.ax_zoom.plot_surface(x, y, z, color='gray', alpha=0.3)
 
         # Add longitude and latitude lines
         self.add_earth_grid(self.ax_full)
