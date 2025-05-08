@@ -94,6 +94,32 @@ class ExtendedKalmanFilter:
         else:
             print("No crashes recorded.")
         return crash_angles
+    
+    
+    def crash3D(self, N=100, dt=1.0, max_steps=10000):
+        """
+        Monte Carlo prediction of crash (theta, phi) using N samples in 3D.
+        """
+        crash_angles = []
+        for j in range(N):
+            sample = np.random.multivariate_normal(self.x, self.P)
+            t = 0.0
+            steps = 0
+            while sample[0] > InitialConditions.earthRadius and steps < max_steps:
+                sample = self.integrator.step(self.f, sample, dt)
+                steps += 1
+            if sample[0] > InitialConditions.earthRadius:
+                print(f"[MC {j}] Max steps reached without crash.")
+                continue
+            crash_angles.append((sample[2], sample[4]))  # (theta, phi)
+            print(f"[MC {j}] Crash at θ = {sample[2]:.6f}, φ = {sample[4]:.6f} after {steps} steps.")
+        crash_angles = np.array(crash_angles)
+        if len(crash_angles):
+            thetas, phis = crash_angles[:, 0], crash_angles[:, 1]
+            print(f"Crash θ mean ± std: {np.mean(thetas):.6f} ± {np.std(thetas):.6f}")
+            print(f"Crash φ mean ± std: {np.mean(phis):.6f} ± {np.std(phis):.6f}")
+        return crash_angles
+
         
 
 def compute_F_analytic(x, CD, A, m, GM, rho_func):
@@ -221,63 +247,3 @@ def compute_F_spherical(x, CD, A, m, GM, rho_func):
              - D * omega_phi * dv[2]
     
     return F
-
-"""
-Usage:
-
-f_dynamics function is just PolarAccelerations.accelerations(*x)
-
-f_jacobian is just compute_F_analytic from above
-
-Needs the integrator to take step forward, this will be determinded by the one we use.
-The integrator class within the predictor should have two functions:
-1. step (RK45)
-2. transition matrix (Mapping the errors from k to k+1)
-    This can be done as follows:
-    def compute_phi(self, F_cont, dt):
-        return expm(F_cont * dt)
-
-Then need to apply it to real data.
-This will require simulation data and initial conditions for state (x) P,Q, R and H /
- which will have to be determined as we go.
-
-# Measurement model
-H = np.array([
-    [1, 0, 0, 0],
-    [0, 0, 1, 0]
-])
-
-# Measurement noise
-sigma_r_meas = 5.0        # m
-sigma_theta_meas = 1e-4   # rad
-R = np.diag([sigma_r_meas**2, sigma_theta_meas**2])
-
-# Process noise (initially zero)
-Q = np.zeros((4, 4))
-
-# Initial uncertainty
-P0 = np.diag([
-    10.0**2,        # r
-    1.0**2,         # vr
-    (1e-4)**2,      # theta
-    (1e-4)**2       # omega
-])
-
-
-ekf = ExtendedKalmanFilter(
-    f_dynamics=f_dynamics,
-    f_jacobian=f_jacobian,
-    H=H,
-    Q=Q,
-    R=R,
-    x0=x0,
-    P0=P0,
-    integrator=EulerIntegrator()
-)
-
-for t in range(num_steps):
-    ekf.predict(dt)
-    z = generate_measurement(x_true[t])
-    ekf.update(z)
-    save(ekf.x, ekf.P)
-"""
