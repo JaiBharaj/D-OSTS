@@ -118,26 +118,16 @@ ekf = ExtendedKalmanFilter(
     integrator=RK45Integrator(CD, A, m, GM, rho_func)
 )
 
-input_file = input_path
-output_file = "ekf_predicted_trajectory.txt"
+########## EKF LOOP ##########
+data = np.loadtxt(output_path)
+measurement_times = data[:, 0]
+measurements = data[:, 1:3]
 
-states = []
-covariances = []
-times = []
-is_measured_flags = []
+states, covariances, times, is_measured_flags = [], [], [], []
+crash_means, crash_stds = [], []
 
-x = x0.copy()
-P = P0.copy()
-
-for i in range(len(measurement_times)):
-    t = measurement_times[i]
-    z = measurements[i]
-
-    if i == 0:
-        dt = 1e-3  # Small nonzero dt for first Jacobian estimate
-    else:
-        dt = t - measurement_times[i - 1]
-
+for i, (t, z) in enumerate(zip(measurement_times, measurements)):
+    dt = 1e-3 if i == 0 else t - measurement_times[i - 1]
     x, P = ekf.predict(dt)
 
     is_measured = False
@@ -150,14 +140,33 @@ for i in range(len(measurement_times)):
     covariances.append(P.copy())
     is_measured_flags.append(is_measured)
 
-# Save to file
-with open(output_file, 'w') as f:
-    for t, x, P, measured in zip(times, states, covariances, is_measured_flags):
-        r = x[0]
-        theta = x[2]
-        r_uncertainty = np.sqrt(P[0, 0])
-        theta_uncertainty = np.sqrt(P[2, 2])
-        f.write(f"{t:.6f} {r:.6f} {theta:.8f} {r_uncertainty:.6f} {theta_uncertainty:.8f} {int(measured)}\n")
+    if i % 1000 == 0:
+        crash_angles = ekf.crash(N=10, max_steps=5000)
+        print(i)
+        crash_means.append(np.mean(crash_angles))
+        crash_stds.append(np.std(crash_angles))
 
-vis = Visualiser2D(input_file, output_file, mode='prewritten')
+########## SAVE OUTPUT ##########
+with open("ekf_predicted_trajectory.txt", 'w') as f:
+    for t, x, P, measured in zip(times, states, covariances, is_measured_flags):
+        r, theta = x[0], x[2]
+        r_std = np.sqrt(P[0, 0])
+        theta_std = np.sqrt(P[2, 2])
+        f.write(f"{t:.6f} {r:.6f} {theta:.8f} {r_std:.6f} {theta_std:.8f} {int(measured)}\n")
+
+########## VISUALISE ##########
+if crash_means:
+    steps = np.arange(0, len(crash_means) * 5, 5)
+    plt.figure(figsize=(10, 5))
+    plt.plot(steps, crash_means, label='Crash θ Estimate')
+    plt.fill_between(steps, np.array(crash_means) - np.array(crash_stds),
+                     np.array(crash_means) + np.array(crash_stds), alpha=0.3, label='1σ Band')
+    plt.xlabel('Time Step')
+    plt.ylabel('Crash θ (rad)')
+    plt.title('Crash Angle Prediction Over Time')
+    plt.legend()
+    plt.grid()
+    plt.show()
+
+vis = Visualiser2D(input_path, "ekf_predicted_trajectory.txt", mode='prewritten')
 vis.visualise()
