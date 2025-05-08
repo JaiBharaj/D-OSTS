@@ -18,7 +18,7 @@ rk.get_trajectory_3d()
 input_path = "trajectory_without_noise_3d.txt"
 output_path = "noisy_radar_data_3d.txt"
 
-H_dark = 200000  # Radar min altitude (m)
+H_dark = 100000  # Radar min altitude (m)
 radar_positions = distribute_radars3D(H_dark, InitialConditions.earthRadius)
 radars = []
 
@@ -80,7 +80,7 @@ R = np.diag([sigma_r_meas**2, sigma_theta_meas**2, sigma_phi_meas**2])
 # Q = np.diag([1000, 0, 1e-7, 0, 1e-7, 0])
 # Q = np.diag([10000, 0, 0, 0, 0, 0])
 # Standard deviations for position components
-sig_r   = 1000          # meters
+sig_r   = 100           # meters
 sig_theta   = 1e-4      # radians
 sig_phi   = 1e-4        # radians
 sig_theta_phi  = 0.5    # correlation between theta and phi
