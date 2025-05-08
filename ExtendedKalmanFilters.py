@@ -95,7 +95,6 @@ class ExtendedKalmanFilter:
             print("No crashes recorded.")
         return crash_angles
     
-    
     def crash3D(self, N=100, dt=1.0, max_steps=10000):
         """
         Monte Carlo prediction of crash (theta, phi) using N samples in 3D.
