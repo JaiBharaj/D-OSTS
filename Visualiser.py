@@ -329,7 +329,20 @@ class Visualiser3D:
         self.earth_radius = InitialConditions.earthRadius
         self.stop_distance = self.earth_radius + break_point
         self.initial_altitude = InitialConditions.initSatAlt
+        self.user_controlled = False
+        self.last_azim = None
+        self.last_elev = None
         self.mode = mode
+
+        def on_draw(event):
+            if self.last_azim is not None and self.last_elev is not None:
+                current_azim = self.ax_zoom.azim
+                current_elev = self.ax_zoom.elev
+                if abs(current_azim - self.last_azim) > 1 or abs(current_elev - self.last_elev) > 1:
+                    self.user_controlled = True
+
+            self.last_azim = self.ax_zoom.azim
+            self.last_elev = self.ax_zoom.elev
 
         # File paths
         self.TRAJECTORY_FILE = trajectory_file_path
@@ -345,6 +358,7 @@ class Visualiser3D:
 
         # Setup figure
         self.setup_plots()
+        self.ax_zoom.figure.canvas.mpl_connect('draw_event', on_draw)
 
     def setup_plots(self):
         # Create 3D figure with two subplots
@@ -575,16 +589,13 @@ class Visualiser3D:
                    self.pred_measurements_zoom, self.altitude_text]
 
         try:
-            # Get current data
             with self.data_lock:
                 current_pos = self.new_position
                 current_pred = self.new_prediction
 
-            # Update actual trajectory
             if current_pos:
                 x, y, z = current_pos
                 self.trajectory.append((x, y, z))
-
                 xs, ys, zs = zip(*self.trajectory) if len(self.trajectory) > 1 else ([x], [y], [z])
 
                 self.trajectory_line_full.set_data_3d(xs, ys, zs)
@@ -592,31 +603,30 @@ class Visualiser3D:
                 self.trajectory_line_zoom.set_data_3d(xs, ys, zs)
                 self.satellite_dot_zoom.set_data_3d([x], [y], [z])
 
-                # Dynamic zoom window
                 current_dist = np.sqrt(x ** 2 + y ** 2 + z ** 2)
                 zoom_width = max(500000, current_dist / 3)
-                elev_angle = np.degrees(np.arctan2(z, np.sqrt(x ** 2 + y ** 2)))
-                self.ax_zoom.view_init(elev=elev_angle, azim=np.degrees(np.arctan2(y, x)))
 
-                if len(self.trajectory) >= 2:
-                    (x0, y0, z0), (x1, y1, z1) = self.trajectory[-2], self.trajectory[-1]
-                    dx, dy, dz = x1 - x0, y1 - y0, z1 - z0
+                # Camera angle auto-update if not overridden by user
+                if not self.user_controlled:
+                    if len(self.trajectory) >= 2:
+                        (x0, y0, z0), (x1, y1, z1) = self.trajectory[-2], self.trajectory[-1]
+                        dx, dy, dz = x1 - x0, y1 - y0, z1 - z0
+                        norm = np.linalg.norm([dx, dy, dz])
+                        if norm > 0:
+                            dx, dy, dz = dx / norm, dy / norm, dz / norm
+                            azim = (np.degrees(np.arctan2(dy, dx)) + 180) % 360
+                            elev = 20
+                            self.ax_zoom.view_init(elev=elev, azim=azim)
+                    else:
+                        elev_angle = np.degrees(np.arctan2(z, np.sqrt(x ** 2 + y ** 2)))
+                        azim_angle = np.degrees(np.arctan2(y, x))
+                        self.ax_zoom.view_init(elev=elev_angle, azim=azim_angle)
 
-                    norm = np.linalg.norm([dx, dy, dz])
-                    if norm > 0:
-                        dx, dy, dz = dx / norm, dy / norm, dz / norm
-
-                        # Compute trailing view
-                        azim = (np.degrees(np.arctan2(dy, dx)) + 180) % 360
-                        elev = 20
-
-                        self.ax_zoom.view_init(elev=elev, azim=azim)
-
+                # Always update zoom box to follow satellite
                 self.ax_zoom.set_xlim(x - zoom_width / 4, x + zoom_width / 4)
                 self.ax_zoom.set_ylim(y - zoom_width / 4, y + zoom_width / 4)
                 self.ax_zoom.set_zlim(z - zoom_width / 4, z + zoom_width / 4)
 
-                # Update altitude display
                 altitude = current_dist - self.earth_radius
                 self.altitude_text.set_text(f"Altitude: {altitude / 1000:.1f} km\n"
                                             f"Distance: {current_dist / 1000:.1f} km\n"
@@ -629,29 +639,24 @@ class Visualiser3D:
                                                 f"Final Position: ({x / 1000:.1f}, {y / 1000:.1f}, {z / 1000:.1f}) km")
                     return artists
 
-            # Update predicted trajectory with uncertainty
             if current_pred:
                 pred_x, pred_y, pred_z, std_x, std_y, std_z, is_meas = current_pred
                 self.predictions.append((pred_x, pred_y, pred_z, std_x, std_y, std_z, is_meas))
 
                 if len(self.predictions) > 1:
-                    # Extract components from predictions
                     pred_points = np.array([(x, y, z) for x, y, z, _, _, _, _ in self.predictions])
                     pred_xs, pred_ys, pred_zs = pred_points.T
                     std_devs = [(sx, sy, sz) for _, _, _, sx, sy, sz, _ in self.predictions]
                     meas_flags = [m for _, _, _, _, _, _, m in self.predictions]
 
-                    # Update predicted trajectory lines
                     self.pred_line_full.set_data_3d(pred_xs, pred_ys, pred_zs)
                     self.pred_dot_full.set_data_3d([pred_x], [pred_y], [pred_z])
                     self.pred_line_zoom.set_data_3d(pred_xs, pred_ys, pred_zs)
                     self.pred_dot_zoom.set_data_3d([pred_x], [pred_y], [pred_z])
 
-                    # Remove old uncertainty tube
                     if hasattr(self, 'uncertainty_tube'):
                         self.uncertainty_tube.remove()
 
-                    # Create new uncertainty tube
                     vertices, faces = self.create_uncertainty_tube(pred_points, std_devs)
                     vertices = np.array(vertices)
                     self.uncertainty_tube = Poly3DCollection(
@@ -661,11 +666,9 @@ class Visualiser3D:
                         linewidths=0.5,
                         edgecolor='blue'
                     )
-
                     self.ax_zoom.add_collection3d(self.uncertainty_tube)
                     artists.append(self.uncertainty_tube)
 
-                    # Update measurement points
                     meas_points = pred_points[np.array(meas_flags, dtype=bool)]
                     if len(meas_points) > 0:
                         meas_xs, meas_ys, meas_zs = meas_points.T
