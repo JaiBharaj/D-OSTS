@@ -10,7 +10,7 @@ from ExtendedKalmanFilters import ExtendedKalmanFilter, compute_F_analytic
 from Visualiser import Visualiser2D
 from PredictorIntegrator import RK45Integrator
 import matplotlib.pyplot as plt
-
+'''
 ######## GENERATING TRUE TRAJECTORY ##########
 rk = Integrator()
 rk.get_trajectory()
@@ -78,7 +78,7 @@ R = np.diag([sigma_r_meas**2, sigma_theta_meas**2])
 
 # Process noise (initially zero)
 # Q = np.zeros((4, 4))
-Q = np.diag([1000, 0, 1e-7, 0])
+Q = np.diag([1000, 0, 1e-6, 0])
 
 # Initial uncertainty
 P0 = np.diag([
@@ -145,8 +145,8 @@ for i, (t, z) in enumerate(zip(measurement_times, measurements)):
     covariances.append(P.copy())
     is_measured_flags.append(is_measured)
 
-    if i % 1000 == 0:
-        crash_angles = ekf.crash(N=10, max_steps=5000)
+    if i % 100 == 0:
+        crash_angles = ekf.crash(N=10, max_steps=4000)
         print(f"Time {t:.1f}s: {len(crash_angles)} crash predictions")
         if len(crash_angles) > 0:
             # Write timestamp followed by angles
@@ -174,6 +174,6 @@ if crash_means:
     plt.legend()
     plt.grid()
     plt.show()
-
+'''
 vis = Visualiser2D("trajectory_without_noise.txt", "ekf_predicted_trajectory.txt", "crash_heatmap_data.txt", mode='prewritten')
 vis.visualise()

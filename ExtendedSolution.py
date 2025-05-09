@@ -70,6 +70,10 @@ ekf = ExtendedKalmanFilter(
 )
 
 ########## EKF EXECUTION ##########
+crash_heatmap_file = "crash_heatmap_data_3d.txt"
+with open(crash_heatmap_file, 'w') as f:  # Clear existing file
+    f.write("")
+
 data = np.loadtxt(output_path)
 measurement_times = data[:, 0]
 measurements = data[:, 1:4]
@@ -93,14 +97,15 @@ for i, (t, z) in enumerate(zip(measurement_times, measurements)):
     is_measured_flags.append(is_measured)
 
     if i % 500 == 0:
-        samples = ekf.crash3D(N=20, max_steps=10000)
-        if len(samples) > 0:
-            thetas = np.array([s[0] for s in samples])
-            phis   = np.array([s[1] for s in samples])
-            crash_theta_means.append(np.mean(thetas))
-            crash_theta_stds.append(np.std(thetas))
-            crash_phi_means.append(np.mean(phis))
-            crash_phi_stds.append(np.std(phis))
+        crash_angles = ekf.crash3D(N=20, max_steps=10000)
+        print(f"Time {t:.1f}s: {len(crash_angles)} crash predictions")
+        if len(crash_angles) > 0:
+            # Flatten the crash_angles array and write timestamp followed by theta/phi pairs
+            with open(crash_heatmap_file, 'a') as f:
+                # Write timestamp first
+                f.write(f"{t:.6f} ")
+                # Then write all theta/phi pairs flattened
+                f.write(' '.join(f"{angle:.6f}" for pair in crash_angles for angle in pair) + '\n')
 
 
 ########## SAVE TRAJECTORY ##########
@@ -145,6 +150,5 @@ if crash_theta_means:
     plt.tight_layout()
     plt.show()
 
-
-vis = Visualiser3D(input_path, "ekf_predicted_trajectory_3d.txt", mode='prewritten')
+vis = Visualiser3D("trajectory_without_noise_3d.txt", "ekf_predicted_trajectory_3d.txt", "crash_heatmap_data_3d.txt", mode='prewritten')
 vis.visualise()

@@ -6,8 +6,8 @@ class Radar:
         self.__mode = mode.upper() # 2D or 3D
         self.__location = np.array(location)
         self.__visibility_angle = np.pi/2 # 80-90 degrees
-        self.__sigma_0 = 50 # baseline error typically 10-50m
-        self.__k = 0.05 # scaling factor typically 0.01-0.05 m/km
+        self.__sigma_0 = 10 # baseline error typically 10-50m
+        self.__k = 0.02 # scaling factor typically 0.01-0.05 m/km
         self.__noise = None
         self.satellite_measurements = {'time': [], 'visibility': [], 'r': [], 'theta': [], 'phi': []}
         if mode.upper() != '2D' and mode.upper() != '3D':
@@ -45,17 +45,18 @@ class Radar:
     
     # method to compute distnce between two position vectors in polar/spherical coordinates
     def distance(self, mode, u, v):
+        # u: single radar position vector (length 2 or 3)
+        # v: multiple satellite position vectors, shape (2, N) or (3, N)
+        u = np.array(u)
         if mode == '2D':
-            cart_u = self.polar_to_cartesian(np.array(u))
-            cart_v = self.polar_to_cartesian(np.array(v))
-            n = 2
+            cart_u = self.polar_to_cartesian(u)[:, np.newaxis]  # shape (2, 1)
+            cart_v = np.array([self.polar_to_cartesian(v[:, i]) for i in range(v.shape[1])]).T  # shape (2, N)
         else:
-            cart_u = self.spherical_to_cartesian(np.array(u))
-            cart_v = self.spherical_to_cartesian(np.array(v))
-            n = 3
-        cart_u = cart_u.reshape(n,1)
-        return np.linalg.norm(cart_u - cart_v, axis=0)
-    
+            cart_u = self.spherical_to_cartesian(u)[:, np.newaxis]  # shape (3, 1)
+            cart_v = np.array([self.spherical_to_cartesian(v[:, i]) for i in range(v.shape[1])]).T  # shape (3, N)
+
+        return np.linalg.norm(cart_u - cart_v, axis=0)  # returns (N,) distances
+
     # method to check whether satellite is visible by a radar station
     def check_visibility(self,satellite_position):
         if self.__mode == '2D':
@@ -107,10 +108,11 @@ class Radar:
             sat_positions = np.array([r, theta_sat])
             
         distance = self.distance(self.__mode, self.__location, sat_positions) #np.sqrt(r*r + R*R - 2*r*R*np.cos(theta_rad - theta_sat))
-        eps_std = self.__sigma_0 + self.__k * distance
+        r = np.array(self.satellite_measurements['r'])
+        eps_std = np.minimum(self.__sigma_0 + self.__k * distance, 100.0)
         eps = np.random.normal(0, eps_std)
-        r += eps # only add noise to the radial distance
-        self.__noise = eps #save the noise vector
-        self.satellite_measurements['r'] = r
+        r_noisy = r + eps  # Element-wise addition
+        self.__noise = eps  # Save the noise
+        self.satellite_measurements['r'] = r_noisy.tolist()  # Store back as list if consistency is needed
         self.satellite_measurements['theta'] = theta_sat
         
