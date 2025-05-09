@@ -13,31 +13,38 @@ from queue import Queue, Empty
 from collections import deque
 
 class Visualiser2D:
-    def __init__(self, trajectory_file_path, prediction_file_path, heatmap_file_map, break_point=0, mode='prewritten'):
+    def __init__(self, trajectory_file_path, prediction_file_path, heatmap_file_path=None, measurement_times=None, break_point=0, mode='prewritten'):
         # Initialise parameters
         self.earth_radius = InitialConditions.earthRadius
         self.stop_distance = self.earth_radius + break_point
         self.initial_altitude = InitialConditions.initSatAlt
-        self.current_predict_t = 0.0
         self.focus_target = 'true'  # or 'predicted'
-        self.zoom_factor = 1.0  # 1.0 is default, <1 is zoom in, >1 is zoom out
+        self.zoom_factor = 1.0
         self.mode = mode
+        self.measurement_times = measurement_times
 
         # File paths
         self.TRAJECTORY_FILE = trajectory_file_path
         self.PREDICTION_FILE = prediction_file_path
-        self.HEATMAP_FILE = heatmap_file_map
+        self.HEATMAP_FILE = heatmap_file_path
 
         # Data storage
         self.trajectory = []
         self.predictions = []
+        self.crash_angles_history = []
         self.data_lock = threading.Lock()
         self.position_queue = Queue()
         self.prediction_queue = Queue()
         self.uncertainty_polygon = None
-        self.crash_heatmap = None
-        self.num_heatmap_bins = 36  # 10° per bin
-        self.heatmap_file = "crash_angles.txt"
+
+        # Heatmap data storage
+        self.heatmap_data = []  # List of (time, [angles]) tuples
+        self.current_heatmap_time = 0
+        self.heatmap_artists = []
+        self.heatmap_cmap = plt.cm.viridis
+        self.heatmap_cbar = None
+        self.heatmap_resolution = 360
+        self.heatmap_alpha = 0.7
 
         # Setup figure
         self.setup_plots()
@@ -54,6 +61,9 @@ class Visualiser2D:
             earth_circle = plt.Circle((0, 0), self.earth_radius, color='blue', alpha=0.3, zorder=1)
             ax.add_patch(earth_circle)
             ax.grid(True, alpha=0.3)
+
+            # Add heatmap to the full view
+            self.heatmap_artists = []
 
             # Add overlay with ticks and degree labels inside the circle
             self.add_radial_ticks_and_labels(ax)
@@ -72,6 +82,9 @@ class Visualiser2D:
         self.trajectory_line_zoom, = self.ax_zoom.plot([], [], 'r-', lw=1.5, zorder=3)
         self.satellite_dot_zoom, = self.ax_zoom.plot([], [], 'ro', markersize=5, zorder=4)
 
+        self.heatmap_cbar = None  # Ensure this is set
+        self.init_colorbar()
+
         # Prediction elements
         self.pred_line_full, = self.ax_full.plot([], [], 'b-', lw=1.2, alpha=0.9, zorder=5, label='Predicted')
         self.pred_dot_full, = self.ax_full.plot([], [], 'bo', markersize=5, zorder=4)
@@ -86,6 +99,19 @@ class Visualiser2D:
 
         self.ax_zoom.set_title('Zoomed View with Uncertainty')
         self.ax_zoom.legend(loc='upper right')
+
+    def init_colorbar(self):
+        if self.heatmap_cbar is None:
+            sm = plt.cm.ScalarMappable(cmap=self.heatmap_cmap,
+                                       norm=plt.Normalize(vmin=0, vmax=1))
+            sm.set_array([])
+            self.heatmap_cbar = self.fig.colorbar(
+                sm, ax=self.ax_full,
+                orientation='vertical',
+                pad=0.05,
+                label='Crash Probability (relative)'
+            )
+            # Don't add to heatmap_artists so it persists
 
     def add_radial_ticks_and_labels(self, ax):
         num_ticks = 12
@@ -156,13 +182,12 @@ class Visualiser2D:
             if self.mode == 'prewritten':
                 for line in f:
                     try:
-                        t_pred, r, theta, dr, dtheta, is_meas = map(float, line.strip().split())
-                        self.current_predict_t = t_pred
+                        time, r, theta, dr, dtheta, is_meas = map(float, line.strip().split())
                         x = r * np.cos(theta)
                         y = r * np.sin(theta)
                         std_x = np.sqrt((dr * np.cos(theta)) ** 2 + (r * dtheta * np.sin(theta)) ** 2)
                         std_y = np.sqrt((dr * np.sin(theta)) ** 2 + (r * dtheta * np.cos(theta)) ** 2)
-                        yield x, y, std_x, std_y, int(is_meas)
+                        yield time, x, y, std_x, std_y, int(is_meas)
                         # time.sleep(0.05)
                     except ValueError:
                         continue
@@ -175,13 +200,12 @@ class Visualiser2D:
                         # time.sleep(0.01)
                         continue
                     try:
-                        t_pred, r, theta, dr, dtheta, is_meas = map(float, line.strip().split())
-                        self.current_predict_t = t_pred
+                        time, r, theta, dr, dtheta, is_meas = map(float, line.strip().split())
                         x = r * np.cos(theta)
                         y = r * np.sin(theta)
                         std_x = np.sqrt((dr * np.cos(theta)) ** 2 + (r * dtheta * np.sin(theta)) ** 2)
                         std_y = np.sqrt((dr * np.sin(theta)) ** 2 + (r * dtheta * np.cos(theta)) ** 2)
-                        yield x, y, std_x, std_y, int(is_meas)
+                        yield time, x, y, std_x, std_y, int(is_meas)
                     except ValueError:
                         continue
 
@@ -207,6 +231,78 @@ class Visualiser2D:
         tangent = np.array([dx, dy]) / norm
         normal = np.array([-tangent[1], tangent[0]])
         return tangent, normal
+
+    def load_heatmap_data(self):
+        if not self.HEATMAP_FILE:
+            return
+
+        try:
+            with open(self.HEATMAP_FILE, 'r') as f:
+                for line in f:
+                    if line.startswith('#'):
+                        continue
+                    parts = line.strip().split()
+                    if len(parts) < 2:
+                        continue
+                    timestamp = float(parts[0])
+                    angles = list(map(float, parts[1:]))
+                    self.heatmap_data.append((timestamp, angles))
+        except FileNotFoundError:
+            print(f"Heatmap file {self.HEATMAP_FILE} not found")
+
+    def update_heatmap(self, current_time):
+        # Clear previous heatmap wedges (but keep colorbar)
+        for artist in self.heatmap_artists:
+            try:
+                artist.remove()
+            except ValueError:
+                # Already removed or not in current figure
+                pass
+        self.heatmap_artists = []
+
+        # Find all predictions made before current_time
+        current_angles = []
+        for t, angles in self.heatmap_data:
+            if t <= current_time:
+                current_angles.extend(angles)
+
+        if not current_angles:
+            return
+
+        # Create histogram
+        angles_rad = np.array(current_angles) % (2 * np.pi)
+        hist, bin_edges = np.histogram(angles_rad, bins=self.heatmap_resolution, range=(0, 2 * np.pi))
+        max_count = max(1, hist.max())
+
+        # Create colored wedges
+        for i in range(self.heatmap_resolution):
+            if hist[i] == 0:
+                continue
+
+            start_angle = np.degrees(bin_edges[i])
+            end_angle = np.degrees(bin_edges[i + 1])
+            intensity = hist[i] / max_count
+
+            wedge = Wedge(
+                (0, 0),
+                self.earth_radius,
+                start_angle,
+                end_angle,
+                width=self.earth_radius * 0.05,
+                color=self.heatmap_cmap(intensity),
+                alpha=self.heatmap_alpha * intensity
+            )
+            self.ax_full.add_patch(wedge)
+            self.heatmap_artists.append(wedge)
+
+        # Update colorbar
+        if self.heatmap_cbar:
+            sm = plt.cm.ScalarMappable(cmap=self.heatmap_cmap,
+                                       norm=plt.Normalize(vmin=0, vmax=max_count))
+            sm.set_array([])
+            self.heatmap_cbar.update_normal(sm)
+        else:
+            self.init_colorbar()  # Initialize if not exists
 
     def update(self, frame):
         MAX_STEPS = 50000
@@ -275,8 +371,9 @@ class Visualiser2D:
 
             # Update predicted trajectory with uncertainty
             if self.predictions:
-                pred_xs, pred_ys, std_xs, std_ys, meas_flags = zip(*self.predictions)
+                pred_ts, pred_xs, pred_ys, std_xs, std_ys, meas_flags = zip(*self.predictions)
                 pred_x, pred_y = pred_xs[-1], pred_ys[-1]
+                current_time = pred_ts[-1]
 
                 self.pred_line_full.set_data(pred_xs, pred_ys)
                 self.pred_dot_full.set_data([pred_x], [pred_y])
@@ -336,40 +433,11 @@ class Visualiser2D:
                 meas_ys = [y for y, flag in zip(pred_ys, meas_flags) if flag]
                 self.pred_measurements_zoom.set_data(meas_xs, meas_ys)
 
-            # Update crash-site heatmap
-            if os.path.exists(self.HEATMAP_FILE):
-                with open(self.HEATMAP_FILE, 'r') as f:
-                    angles = []
-                    for line in f:
-                        parts = line.strip().split()
-                        angles.extend(float(p) % (2 * np.pi) for p in parts[1:] if p)
+                # Update heatmap for current time
+                self.update_heatmap(current_time)
+                artists.extend(self.heatmap_artists)
 
-                if float(parts[0]) == self.current_predict_t:
-                    if angles:
-                        bin_counts, bin_edges = np.histogram(angles, bins=self.num_heatmap_bins, range=(0, 2 * np.pi))
-                        bin_angles = (bin_edges[:-1] + bin_edges[1:]) / 2
-                        max_count = bin_counts.max() or 1
-
-                        if self.crash_heatmap is not None:
-                            for patch in self.crash_heatmap:
-                                patch.remove()
-                        self.crash_heatmap = []
-
-                        for count, angle in zip(bin_counts, bin_angles):
-                            alpha = count / max_count
-                            wedge = Wedge(
-                                center=(0, 0),
-                                r=self.earth_radius * 1.05,
-                                theta1=np.degrees(angle - np.pi / self.num_heatmap_bins),
-                                theta2=np.degrees(angle + np.pi / self.num_heatmap_bins),
-                                width=0.02 * self.earth_radius,
-                                facecolor='orange',
-                                alpha=alpha,
-                                zorder=1.5
-                            )
-                            self.ax_full.add_patch(wedge)
-                            self.crash_heatmap.append(wedge)
-                            artists.append(wedge)
+                return artists
 
         except Exception as e:
             print(f"Animation error: {e}")
@@ -381,6 +449,19 @@ class Visualiser2D:
         data_thread = threading.Thread(target=self.load_data, daemon=True)
         data_thread.start()
 
+        # Load heatmap data properly
+        self.load_heatmap_data()
+
+        # Load heatmap data if file exists
+        if self.HEATMAP_FILE:
+            try:
+                with open(self.HEATMAP_FILE, 'r') as f:
+                    for line in f:
+                        samples = map(float, line.strip().split())
+                        self.crash_angles_history.extend(samples)
+            except FileNotFoundError:
+                print(f"Heatmap file {self.HEATMAP_FILE} not found")
+
         # Create animation
         self.ani = animation.FuncAnimation(
             self.fig, self.update,
@@ -390,7 +471,7 @@ class Visualiser2D:
             cache_frame_data=False
         )
 
-        plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+        plt.tight_layout(rect=[0, 0.03, 1, 0.92])
         plt.show()
 
 class Visualiser3D:
