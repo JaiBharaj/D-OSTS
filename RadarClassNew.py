@@ -7,7 +7,6 @@ class Radar:
         self.__location = np.array(location)
         self.__visibility_angle = np.pi/2 # 80-90 degrees
         self.__sigma_0 = 50 # baseline error typically 10-50m
-        self.__min_sigma= 1.0
         self.__k = 0.05 # scaling factor typically 0.01-0.05 m/km
         self.__noise = None
         self.satellite_measurements = {'time': [], 'visibility': [], 'r': [], 'theta': [], 'phi': []}
@@ -108,7 +107,7 @@ class Radar:
             sat_positions = np.array([r, theta_sat])
             
         distance = self.distance(self.__mode, self.__location, sat_positions) #np.sqrt(r*r + R*R - 2*r*R*np.cos(theta_rad - theta_sat))
-        eps_std = np.maximum(self.__sigma_0 - self.__k * distance, self.__min_sigma)
+        eps_std = self.__sigma_0 + self.__k * distance
         eps = np.random.normal(0, eps_std)
         r += eps # only add noise to the radial distance
         self.__noise = eps #save the noise vector
