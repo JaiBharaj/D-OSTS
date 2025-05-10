@@ -5,6 +5,8 @@ matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
 from matplotlib import colors as mcolors
+from scipy.ndimage import gaussian_filter
+from scipy.stats import gaussian_kde
 from matplotlib import cm
 import matplotlib.animation as animation
 from matplotlib.patches import Polygon, Wedge
@@ -470,7 +472,7 @@ class Visualiser2D:
             cache_frame_data=False
         )
 
-        plt.tight_layout(rect=[0, 0.03, 1, 0.92])
+        plt.tight_layout(rect=[0.0, 0.03, 1.0, 0.92])
         plt.show()
 
 class Visualiser3D:
@@ -661,12 +663,11 @@ class Visualiser3D:
                     timestamp = float(parts[0])
                     points = []
                     # Read triplets of (theta, phi, intensity)
-                    for i in range(1, len(parts), 3):
+                    for i in range(1, len(parts), 2):
                         try:
                             theta = float(parts[i])
                             phi = float(parts[i+1])
-                            intensity = float(parts[i+2])
-                            points.append((theta, phi, intensity))
+                            points.append((theta, phi))
                         except (IndexError, ValueError):
                             continue
                     self.heatmap_data.append((timestamp, points))
@@ -682,55 +683,61 @@ class Visualiser3D:
         if not self.heatmap_data:
             return
 
-        # Find all predictions made before current_time
-        current_points = []
+        # Collect all points up to current_time
+        all_points = []
         for t, points in self.heatmap_data:
             if t <= current_time:
-                current_points.extend(points)
+                all_points.extend(points)
 
-        if not current_points:
+        if not all_points:
             return
 
-        # Convert to numpy array for processing
-        points_array = np.array(current_points)
-        thetas = points_array[:, 0]
-        phis = points_array[:, 1]
-        intensities = points_array[:, 2]
+        # Convert to numpy array and fix coordinate ranges
+        points_array = np.array(all_points)
+        thetas = - points_array[:, 0] % (2 * np.pi)  # Wrap theta to [0, 2π]
+        phis = - points_array[:, 1] % np.pi  # Wrap and absolute phi to [0, π]
 
-        # Improved normalization with threshold
-        max_intensity = max(1e-10, intensities.max())
-        intensity_threshold = 0.05 * max_intensity  # 5% of max intensity as threshold
-        normalized_intensities = (intensities - intensity_threshold) / (max_intensity - intensity_threshold)
-        normalized_intensities = np.clip(normalized_intensities, 0, 1)
-
-        # Create grid for interpolation
+        # Create grid for density calculation
         theta_grid = np.linspace(0, 2 * np.pi, self.heatmap_resolution)
         phi_grid = np.linspace(0, np.pi, self.heatmap_resolution)
         theta_mesh, phi_mesh = np.meshgrid(theta_grid, phi_grid)
 
-        # Grid the data with linear interpolation
-        grid_z = griddata(
-            (thetas, phis),
-            normalized_intensities,
-            (theta_mesh, phi_mesh),
-            method='linear',
-            fill_value=0
-        )
+        # Calculate point density
+        H, _, _ = np.histogram2d(thetas, phis, bins=[theta_grid, phi_grid])
+
+        # Apply smoothing if available
+        try:
+            from scipy.ndimage import gaussian_filter
+            H = gaussian_filter(H, sigma=1)
+        except ImportError:
+            print("Note: scipy.ndimage not available, skipping smoothing")
+            pass
+
+        # Smooth the histogram a bit
+        H = gaussian_filter(H, sigma=1)
+
+        # Normalize
+        if H.max() > 0:
+            grid_z = H / H.max()
+        else:
+            grid_z = H
+
+        print(f"Density range: {grid_z.min():.4f} to {grid_z.max():.4f}")
 
         # Create surface coordinates
         x = self.earth_radius * np.sin(phi_mesh) * np.cos(theta_mesh)
         y = self.earth_radius * np.sin(phi_mesh) * np.sin(theta_mesh)
         z = self.earth_radius * np.cos(phi_mesh)
 
-        # Apply colormap with enhanced transparency
+        # Apply colormap with enhanced visibility
         norm = Normalize(vmin=0, vmax=1)
         mapped_colors = self.heatmap_cmap(norm(grid_z))
 
-        # Modify alpha channel - make low values more transparent
-        alpha = np.power(grid_z, 0.5)  # Square root gives more contrast
-        mapped_colors[..., -1] = alpha * self.heatmap_alpha  # Apply base alpha factor
+        # Make the heatmap more visible
+        alpha = 0.3 + 0.7 * np.power(grid_z, 0.3)
+        mapped_colors[..., -1] = alpha * self.heatmap_alpha
 
-        # Plot the heatmap with explicit limits
+        # Plot the heatmap
         heatmap = self.ax_full.plot_surface(
             x, y, z,
             facecolors=mapped_colors,
@@ -742,25 +749,23 @@ class Visualiser3D:
         )
         self.heatmap_artists.append(heatmap)
 
-        # Force reset the axes limits
-        self.ax_full.set_xlim(self.fixed_limits)
-        self.ax_full.set_ylim(self.fixed_limits)
-        self.ax_full.set_zlim(self.fixed_limits)
-
         # Update colorbar
-        self.update_colorbar(max_intensity)
-
-    def init_colorbar(self):
-        if self.heatmap_cbar is None:
-            sm = plt.cm.ScalarMappable(cmap=self.heatmap_cmap,
-                                      norm=plt.Normalize(vmin=0, vmax=1))
+        if not hasattr(self, 'heatmap_cbar') or self.heatmap_cbar is None:
+            sm = plt.cm.ScalarMappable(cmap=self.heatmap_cmap, norm=norm)
             sm.set_array([])
             self.heatmap_cbar = self.fig.colorbar(
-                sm, ax=self.ax_full,
+                sm,
+                ax=self.ax_full,
                 orientation='vertical',
                 pad=0.05,
-                label='Crash Probability (relative)'
+                label='Normalized Density'
             )
+        else:
+            self.heatmap_cbar.mappable.set_norm(norm)
+            self.heatmap_cbar.update_normal(self.heatmap_cbar.mappable)
+
+        # Force redraw
+        self.fig.canvas.draw_idle()
 
     def update_colorbar(self, max_intensity):
         if not self.heatmap_cbar:

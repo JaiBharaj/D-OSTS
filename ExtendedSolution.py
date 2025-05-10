@@ -10,7 +10,7 @@ from NumericalIntegrator import Integrator
 from ExtendedKalmanFilters import ExtendedKalmanFilter, compute_F_spherical
 from Visualiser import Visualiser3D
 from PredictorIntegrator import Integrator3D
-
+'''
 ########## TRUE TRAJECTORY ##########
 rk = Integrator()
 rk.get_trajectory_3d()
@@ -149,6 +149,6 @@ if crash_theta_means:
 
     plt.tight_layout()
     plt.show()
-
+'''
 vis = Visualiser3D("trajectory_without_noise_3d.txt", "ekf_predicted_trajectory_3d.txt", "crash_heatmap_data_3d.txt", mode='prewritten')
 vis.visualise()

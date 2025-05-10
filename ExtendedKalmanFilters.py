@@ -110,7 +110,7 @@ class ExtendedKalmanFilter:
             if sample[0] > InitialConditions.earthRadius:
                 print(f"[MC {j}] Max steps reached without crash.")
                 continue
-            crash_angles.append((sample[4], sample[2]))  # (theta, phi)
+            crash_angles.append((sample[2], sample[4]))  # (theta, phi)
             print(f"[MC {j}] Crash at θ = {sample[2]:.6f}, φ = {sample[4]:.6f} after {steps} steps.")
         crash_angles = np.array(crash_angles)
         if len(crash_angles):
