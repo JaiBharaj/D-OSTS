@@ -492,7 +492,7 @@ class Visualiser3D:
         # Heatmap parameters
         self.heatmap_data = []  # List of (time, [(theta, phi, intensity)]) tuples
         self.current_heatmap_time = 0
-        self.heatmap_cmap = plt.cm.plasma  # Or 'hot', 'inferno', 'magma'
+        self.heatmap_cmap = plt.cm.Reds  # Or 'hot', 'inferno', 'magma'
         self.heatmap_alpha = 0.8  # Increase base alpha
         self.heatmap_resolution = 50  # Number of divisions in theta and phi
         self.heatmap_artists = []
@@ -707,7 +707,6 @@ class Visualiser3D:
 
         # Apply smoothing if available
         try:
-            from scipy.ndimage import gaussian_filter
             H = gaussian_filter(H, sigma=1)
         except ImportError:
             print("Note: scipy.ndimage not available, skipping smoothing")
