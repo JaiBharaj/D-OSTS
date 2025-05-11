@@ -118,6 +118,40 @@ class ExtendedKalmanFilter:
             print(f"Crash θ mean ± std: {np.mean(thetas):.6f} ± {np.std(thetas):.6f}")
             print(f"Crash φ mean ± std: {np.mean(phis):.6f} ± {np.std(phis):.6f}")
         return crash_angles
+    
+    def crash3D_with_thrust(self, delta_v, h_thrust, N=100, dt=1.0, max_steps=10000):
+        crash_angles = []
+        for j in range(N):
+            sample = np.random.multivariate_normal(self.x, self.P)
+            t = 0.0
+            steps = 0
+            thrust_applied = False
+            while sample[0] > InitialConditions.earthRadius and steps < max_steps:
+                if not thrust_applied and sample[0] <= InitialConditions.earthRadius + h_thrust:
+                    r, vr, phi, vphi, lam, vlam = sample
+                    e_r   = self.integrator.sph_to_cart(1, phi, lam)
+                    e_phi = self.integrator.sph_to_cart(1, phi + np.pi/2, lam)
+                    e_lam = self.integrator.sph_to_cart(1, np.pi/2, lam + np.pi/2)
+                    v_vec = vr*e_r + r*vphi*e_phi + r*np.sin(phi)*vlam*e_lam
+                    v_hat = v_vec / np.linalg.norm(v_vec)
+                    v_vec_new = v_vec + delta_v * v_hat
+                    sample[1] = np.dot(v_vec_new, e_r)
+                    sample[3] = np.dot(v_vec_new, e_phi) / r
+                    sample[5] = np.dot(v_vec_new, e_lam) / (r*np.sin(phi))
+                    thrust_applied = True
+                sample = self.integrator.step(self.f, sample, dt)
+                steps += 1
+            if sample[0] > InitialConditions.earthRadius:
+                print(f"[MC {j}] Max steps reached without crash (with thrust).")
+                continue
+            crash_angles.append((sample[2], sample[4]))
+            print(f"[MC {j}] Crash with thrust at θ = {sample[2]:.6f}, φ = {sample[4]:.6f} after {steps} steps.")
+        crash_angles = np.array(crash_angles)
+        if len(crash_angles):
+            thetas, phis = crash_angles[:, 0], crash_angles[:, 1]
+            print(f"Crash (with thrust) θ mean ± std: {np.mean(thetas):.6f} ± {np.std(thetas):.6f}")
+            print(f"Crash (with thrust) φ mean ± std: {np.mean(phis):.6f} ± {np.std(phis):.6f}")
+        return crash_angles
         
 
 def compute_F_analytic(x, CD, A, m, GM, rho_func):
