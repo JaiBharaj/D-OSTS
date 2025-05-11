@@ -476,7 +476,7 @@ class Visualiser2D:
         plt.show()
 
 class Visualiser3D:
-    def __init__(self, trajectory_file_path, prediction_file_path, heatmap_file_path=None, break_point=0, mode='prewritten', MAX_STEPS=50000):
+    def __init__(self, trajectory_file_path, prediction_file_path, heatmap_file_path=None, thrust_heatmap_file_path=None, break_point=0, mode='prewritten', MAX_STEPS=50000):
         # Initialise parameters
         self.earth_radius = InitialConditions.earthRadius
         self.stop_distance = self.earth_radius + break_point
@@ -492,11 +492,18 @@ class Visualiser3D:
         # Heatmap parameters
         self.heatmap_data = []  # List of (time, [(theta, phi, intensity)]) tuples
         self.current_heatmap_time = 0
-        self.heatmap_cmap = plt.cm.Reds  # Or 'hot', 'inferno', 'magma'
+        self.heatmap_cmap = plt.cm.Reds
         self.heatmap_alpha = 0.8  # Increase base alpha
         self.heatmap_resolution = 50  # Number of divisions in theta and phi
         self.heatmap_artists = []
         self.heatmap_cbar = None
+
+        # Thrust Heatmap parameters
+        self.thrust_heatmap_data = []  # List of (time, [(theta, phi, intensity)]) tuples
+        self.thrust_current_heatmap_time = 0
+        self.thrust_heatmap_cmap = plt.cm.Greens
+        self.thrust_heatmap_artists = []
+        self.thrust_heatmap_cbar = None
 
         def on_draw(event):
             if self.last_azim is not None and self.last_elev is not None:
@@ -512,6 +519,7 @@ class Visualiser3D:
         self.TRAJECTORY_FILE = trajectory_file_path
         self.PREDICTION_FILE = prediction_file_path
         self.HEATMAP_FILE = heatmap_file_path
+        self.THRUST_HEATMAP_FILE = thrust_heatmap_file_path
 
         # Data storage
         self.trajectory = deque(maxlen=MAX_STEPS)
@@ -525,7 +533,7 @@ class Visualiser3D:
         self.setup_plots()
         self.ax_zoom.figure.canvas.mpl_connect('draw_event', on_draw)
         self.fig.canvas.mpl_connect('key_press_event', self.on_key_press)
-        self.ax_full.set_autoscale_on(False)  # Disable automatic scaling
+        # self.ax_full.set_autoscale_on(False)  # Disable automatic scaling
         self.fixed_limits = (-7E+6, 7E+6)  # Match your initial plot_radius
 
     def setup_plots(self):
@@ -649,144 +657,178 @@ class Visualiser3D:
             ax.text(x, y, z, f'{lat}°', color='black', fontsize=8, ha='center', va='center')
 
     def load_heatmap_data(self):
-        if not self.HEATMAP_FILE:
-            return
-
-        try:
-            with open(self.HEATMAP_FILE, 'r') as f:
-                for line in f:
-                    if line.startswith('#'):
-                        continue
-                    parts = line.strip().split()
-                    if len(parts) < 3:  # Need at least timestamp, theta, phi
-                        continue
-                    timestamp = float(parts[0])
-                    points = []
-                    # Read triplets of (theta, phi, intensity)
-                    for i in range(1, len(parts), 2):
-                        try:
-                            theta = float(parts[i])
-                            phi = float(parts[i+1])
-                            points.append((theta, phi))
-                        except (IndexError, ValueError):
+        for file_path in [self.HEATMAP_FILE, self.THRUST_HEATMAP_FILE]:
+            if not file_path:
+                return
+            try:
+                with open(file_path, 'r') as f:
+                    for line in f:
+                        if line.startswith('#'):
                             continue
-                    self.heatmap_data.append((timestamp, points))
-        except FileNotFoundError:
-            print(f"Heatmap file {self.HEATMAP_FILE} not found")
+                        parts = line.strip().split()
+                        if len(parts) < 3:  # Need at least timestamp, theta, phi
+                            continue
+                        timestamp = float(parts[0])
+                        points = []
+                        # Read triplets of (theta, phi, intensity)
+                        for i in range(1, len(parts), 2):
+                            try:
+                                theta = float(parts[i])
+                                phi = float(parts[i+1])
+                                points.append((theta, phi))
+                            except (IndexError, ValueError):
+                                continue
+                        if file_path == self.HEATMAP_FILE:
+                            self.heatmap_data.append((timestamp, points))
+                        else:
+                            self.thrust_heatmap_data.append((timestamp, points))
+            except FileNotFoundError:
+                print(f"Heatmap file {file_path} not found")
 
     def update_heatmap(self, current_time):
-        # Clear previous heatmap
-        for artist in self.heatmap_artists:
-            artist.remove()
-        self.heatmap_artists = []
+        # Clear previous heatmaps
+        for heat_artists in [self.heatmap_artists, self.thrust_heatmap_artists]:
+            for artist in heat_artists:
+                artist.remove()
+            heat_artists.clear()
 
-        if not self.heatmap_data:
+        # Process both heatmap datasets
+        for dataset, cmap, artist_list in [
+            (self.heatmap_data, self.heatmap_cmap, self.heatmap_artists),
+            (self.thrust_heatmap_data, self.thrust_heatmap_cmap, self.thrust_heatmap_artists)
+        ]:
+            if not dataset:
+                continue
+
+            # Collect all points up to current_time
+            current_points = []
+            for t, points in dataset:
+                if t <= current_time:
+                    current_points.extend(points)
+
+            if not current_points:
+                continue
+
+            # Convert to numpy array and fix coordinate ranges
+            points_array = np.array(current_points)
+            thetas = -points_array[:, 0] % (2 * np.pi)  # Wrap theta to [0, 2π]
+            phis = -points_array[:, 1] % np.pi  # Wrap phi to [0, π]
+
+            # Create grid for density calculation
+            theta_grid = np.linspace(0, 2 * np.pi, self.heatmap_resolution)
+            phi_grid = np.linspace(0, np.pi, self.heatmap_resolution)
+            theta_mesh, phi_mesh = np.meshgrid(theta_grid, phi_grid)
+
+            # Calculate point density
+            H, _, _ = np.histogram2d(thetas, phis, bins=[theta_grid, phi_grid])
+
+            # Apply smoothing if available
+            try:
+                from scipy.ndimage import gaussian_filter
+                H = gaussian_filter(H, sigma=1)
+            except ImportError:
+                print("Note: scipy.ndimage not available, skipping smoothing")
+                pass
+
+            # Normalize
+            if H.max() > 0:
+                grid_z = H / H.max()
+            else:
+                grid_z = H
+
+            # Create surface coordinates
+            x = self.earth_radius * np.sin(phi_mesh) * np.cos(theta_mesh)
+            y = self.earth_radius * np.sin(phi_mesh) * np.sin(theta_mesh)
+            z = self.earth_radius * np.cos(phi_mesh)
+
+            # Apply colormap with consistent alpha
+            norm = Normalize(vmin=0, vmax=1)
+            mapped_colors = cmap(norm(grid_z))
+            alpha = 0.3 + 0.7 * np.power(grid_z, 0.3)
+            mapped_colors[..., -1] = alpha * self.heatmap_alpha
+
+            # Plot the heatmap
+            heatmap = self.ax_full.plot_surface(
+                x, y, z,
+                facecolors=mapped_colors,
+                rstride=1,
+                cstride=1,
+                shade=False,
+                zorder=2,
+                antialiased=True,
+                linewidth=0.0
+            )
+            artist_list.append(heatmap)
+
+            # Update combined colorbar
+            self.update_colorbar()
+
+            # Force redraw
+            self.fig.canvas.draw_idle()
+
+    def update_colorbar(self):
+        """Update colorbar without causing plot resizing"""
+        # Only proceed if we have data to show
+        has_nominal = len(self.heatmap_data) > 0
+        has_thrust = hasattr(self, 'thrust_heatmap_data') and len(self.thrust_heatmap_data) > 0
+
+        if not has_nominal and not has_thrust:
+            # Remove colorbar if it exists but we have no data
+            if hasattr(self, 'heatmap_cbar') and self.heatmap_cbar is not None:
+                self.heatmap_cbar.remove()
+                self.heatmap_cbar = None
             return
 
-        # Collect all points up to current_time
-        all_points = []
-        for t, points in self.heatmap_data:
-            if t <= current_time:
-                all_points.extend(points)
+        # Get current axis limits to preserve them
+        xlim = self.ax_full.get_xlim()
+        ylim = self.ax_full.get_ylim()
+        zlim = self.ax_full.get_zlim()
 
-        if not all_points:
-            return
-
-        # Convert to numpy array and fix coordinate ranges
-        points_array = np.array(all_points)
-        thetas = - points_array[:, 0] % (2 * np.pi)  # Wrap theta to [0, 2π]
-        phis = - points_array[:, 1] % np.pi  # Wrap and absolute phi to [0, π]
-
-        # Create grid for density calculation
-        theta_grid = np.linspace(0, 2 * np.pi, self.heatmap_resolution)
-        phi_grid = np.linspace(0, np.pi, self.heatmap_resolution)
-        theta_mesh, phi_mesh = np.meshgrid(theta_grid, phi_grid)
-
-        # Calculate point density
-        H, _, _ = np.histogram2d(thetas, phis, bins=[theta_grid, phi_grid])
-
-        # Apply smoothing if available
-        try:
-            H = gaussian_filter(H, sigma=1)
-        except ImportError:
-            print("Note: scipy.ndimage not available, skipping smoothing")
-            pass
-
-        # Smooth the histogram a bit
-        H = gaussian_filter(H, sigma=1)
-
-        # Normalize
-        if H.max() > 0:
-            grid_z = H / H.max()
-        else:
-            grid_z = H
-
-        print(f"Density range: {grid_z.min():.4f} to {grid_z.max():.4f}")
-
-        # Create surface coordinates
-        x = self.earth_radius * np.sin(phi_mesh) * np.cos(theta_mesh)
-        y = self.earth_radius * np.sin(phi_mesh) * np.sin(theta_mesh)
-        z = self.earth_radius * np.cos(phi_mesh)
-
-        # Apply colormap with enhanced visibility
-        norm = Normalize(vmin=0, vmax=1)
-        mapped_colors = self.heatmap_cmap(norm(grid_z))
-
-        # Make the heatmap more visible
-        alpha = 0.3 + 0.7 * np.power(grid_z, 0.3)
-        mapped_colors[..., -1] = alpha * self.heatmap_alpha
-
-        # Plot the heatmap
-        heatmap = self.ax_full.plot_surface(
-            x, y, z,
-            facecolors=mapped_colors,
-            rstride=1,
-            cstride=1,
-            shade=False,
-            zorder=2,
-            antialiased=True
-        )
-        self.heatmap_artists.append(heatmap)
-
-        # Update colorbar
+        # Create/update colorbar without removing it (preserves layout)
         if not hasattr(self, 'heatmap_cbar') or self.heatmap_cbar is None:
-            sm = plt.cm.ScalarMappable(cmap=self.heatmap_cmap, norm=norm)
-            sm.set_array([])
-            self.heatmap_cbar = self.fig.colorbar(
-                sm,
-                ax=self.ax_full,
-                orientation='vertical',
-                pad=0.05,
-                label='Normalized Density'
-            )
+            # Initial creation
+            if has_nominal and has_thrust:
+                sm_nominal = plt.cm.ScalarMappable(cmap=self.heatmap_cmap, norm=plt.Normalize(vmin=0, vmax=1))
+                sm_thrust = plt.cm.ScalarMappable(cmap=self.thrust_heatmap_cmap, norm=plt.Normalize(vmin=0, vmax=1))
+                self.heatmap_cbar = self.fig.colorbar(
+                    [sm_nominal, sm_thrust],
+                    ax=self.ax_full,
+                    orientation='vertical',
+                    pad=0.05,
+                    label='Crash Probability'
+                )
+                # Add labels
+                self.heatmap_cbar.ax.text(0.5, 1.05, 'Nominal', ha='center', va='bottom')
+                self.heatmap_cbar.ax.text(0.5, -0.05, 'Thruster', ha='center', va='top')
+            else:
+                cmap = self.heatmap_cmap if has_nominal else self.thrust_heatmap_cmap
+                label = 'Nominal' if has_nominal else 'Thruster'
+                sm = plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(vmin=0, vmax=1))
+                self.heatmap_cbar = self.fig.colorbar(
+                    sm,
+                    ax=self.ax_full,
+                    orientation='vertical',
+                    pad=0.05,
+                    label=f'{label} Crash Probability'
+                )
         else:
-            self.heatmap_cbar.mappable.set_norm(norm)
-            self.heatmap_cbar.update_normal(self.heatmap_cbar.mappable)
+            # Just update the existing colorbar
+            if has_nominal and has_thrust:
+                self.heatmap_cbar.mappable.set_cmap(self.heatmap_cmap)
+                self.heatmap_cbar.set_label('Crash Probability')
+            else:
+                cmap = self.heatmap_cmap if has_nominal else self.thrust_heatmap_cmap
+                label = 'Nominal' if has_nominal else 'Thruster'
+                self.heatmap_cbar.mappable.set_cmap(cmap)
+                self.heatmap_cbar.set_label(f'{label} Crash Probability')
 
-        # Force redraw
-        self.fig.canvas.draw_idle()
+        # Restore original axis limits
+        self.ax_full.set_xlim(xlim)
+        self.ax_full.set_ylim(ylim)
+        self.ax_full.set_zlim(zlim)
 
-    def update_colorbar(self, max_intensity):
-        if not self.heatmap_cbar:
-            # Initialize the colorbar only once
-            sm = plt.cm.ScalarMappable(
-                cmap=self.heatmap_cmap,
-                norm=plt.Normalize(vmin=0, vmax=max_intensity)
-            )
-            sm.set_array([])  # Required for ScalarMappable to work with colorbar
-            self.heatmap_cbar = self.fig.colorbar(
-                sm,
-                ax=self.ax_full,
-                orientation='vertical',
-                pad=0.05,
-                label='Crash Probability'
-            )
-        else:
-            # Update the normalization of the ScalarMappable associated with the colorbar
-            self.heatmap_cbar.mappable.set_norm(plt.Normalize(vmin=0, vmax=max_intensity))
-
-        # Trigger a redraw of the figure
-        self.fig.canvas.draw_idle()
+        # Use tight_layout to prevent shrinking
+        self.fig.tight_layout()
 
     def on_key_press(self, event):
         if event.key == 't':
