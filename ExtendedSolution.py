@@ -11,6 +11,14 @@ from ExtendedKalmanFilters import ExtendedKalmanFilter, compute_F_spherical
 from Visualiser import Visualiser3D
 from PredictorIntegrator import Integrator3D
 
+# Define here for now
+def proportion_in_populated(crash_samples, integrator):
+    count = 0
+    for theta, phi in crash_samples:
+        if integrator.in_populated(phi, theta):  # phi = latitude, theta = longitude
+            count += 1
+    return count / len(crash_samples) if len(crash_samples) > 0 else 0.0
+
 ########## TRUE TRAJECTORY ##########
 rk = Integrator()
 rk.get_trajectory_3d()
@@ -92,6 +100,14 @@ crash_theta_stds_thrust, crash_phi_stds_thrust = [], []
 delta_v = 80.0  # m/s
 h_thrust = InitialConditions.hThrust  # m
 
+POP_THRESHOLD = 0.25
+SAFE_THRESHOLD = 0.05
+
+log_path = "thrust_decision_log.txt"
+with open(log_path, 'w') as f:
+    f.write("Time\tp_pop\tp_pop_thrust\tThrustDecision\n")
+
+
 for i, (t, z) in enumerate(zip(measurement_times, measurements)):
     dt = 1e-3 if i == 0 else t - measurement_times[i - 1]
     x, P = ekf.predict(dt)
@@ -117,6 +133,19 @@ for i, (t, z) in enumerate(zip(measurement_times, measurements)):
         with open(crash_heatmap_file_thrust, 'a') as f:
             f.write(f"{t:.6f} ")
             f.write(' '.join(f"{angle:.6f}" for pair in crash_angles_thrust for angle in pair) + '\n')
+
+        # --- Decision Logic ---
+        p_pop = proportion_in_populated(crash_angles, rk)
+        p_pop_thrust = proportion_in_populated(crash_angles_thrust, rk)
+
+
+        trigger_thrust = (p_pop > POP_THRESHOLD and p_pop_thrust < SAFE_THRESHOLD)
+
+        print(f"[t = {t:.1f}s] p_pop = {p_pop:.3f}, p_thrust = {p_pop_thrust:.3f}, thrust = {trigger_thrust}")
+
+        with open(log_path, 'a') as f:
+            f.write(f"{t:.2f}\t{p_pop:.5f}\t{p_pop_thrust:.5f}\t{int(trigger_thrust)}\n")
+
 
 ########## SAVE TRAJECTORY ##########
 with open("ekf_predicted_trajectory_3d.txt", 'w') as f:
