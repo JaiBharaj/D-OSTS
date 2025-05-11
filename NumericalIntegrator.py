@@ -103,12 +103,14 @@ class Integrator:
             return np.arange(n_total)
         return np.linspace(0, n_total - 1, n_target, dtype=int)
     
+    @staticmethod
     def sph_to_cart(r, phi, lam):
         x = r*np.sin(phi)*np.cos(lam)
         y = r*np.sin(phi)*np.sin(lam)
         z = r*np.cos(phi)
         return np.array([x, y, z])
 
+    @staticmethod
     def cart_to_sph(vec):
         x, y, z = vec
         r   = np.linalg.norm(vec)
@@ -116,16 +118,18 @@ class Integrator:
         lam = np.arctan2(y, x)
         return r, phi, lam
     
-    def great_circle_distance(self, phi1, lam1, phi2, lam2):
+    @staticmethod
+    def great_circle_distance(phi1, lam1, phi2, lam2):
         Δσ = np.arccos(
             np.sin(phi1)*np.sin(phi2) +
             np.cos(phi1)*np.cos(phi2)*np.cos(lam1-lam2)
         )
         return InitialConditions.earthRadius * Δσ 
     
-    def in_populated(self, phi, lam):
-        for pc in self.populated_centers:
-            if self.great_circle_distance(phi, lam, pc[0], pc[1]) < self.populated_radius:
+    @staticmethod
+    def in_populated(phi, lam):
+        for pc in InitialConditions.populatedCenters:
+            if Integrator.great_circle_distance(phi, lam, pc[0], pc[1]) < InitialConditions.populatedRadius:
                 return True
         return False
 
@@ -154,7 +158,7 @@ class Integrator:
         r_imp, phi_imp, lam_imp = sol0.y[0,-1], sol0.y[2,-1], sol0.y[4,-1]
         
         # use thrust or not
-        if self.in_populated(phi_imp, lam_imp) or bonus:
+        if Integrator.in_populated(phi_imp, lam_imp) or bonus:
             print("Need thrust")
             # integrate to thrust height
             sol1 = solve_ivp(
