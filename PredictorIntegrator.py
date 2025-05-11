@@ -68,3 +68,14 @@ class Integrator3D(Integrator):
             pert = self.step(None, xp, dt)
             M[:, i] = (pert - base) / eps
         return M
+    
+    @staticmethod
+    def sph_to_cart(r, phi, lam):
+        """
+        Converts spherical coordinates to Cartesian.
+        Assumes φ = polar angle from +z axis, λ = azimuth from +x axis (radians).
+        """
+        x = r * np.sin(phi) * np.cos(lam)
+        y = r * np.sin(phi) * np.sin(lam)
+        z = r * np.cos(phi)
+        return np.array([x, y, z])
