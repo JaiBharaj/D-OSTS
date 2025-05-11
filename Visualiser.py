@@ -736,10 +736,15 @@ class Visualiser3D:
             else:
                 grid_z = H
 
+            # Offset radius slightly if this is the thrust heatmap
+            r = self.earth_radius
+            if dataset is self.thrust_heatmap_data:
+                r *= 1.02  # 2% lift to float above nominal heatmap
+
             # Create surface coordinates
-            x = self.earth_radius * np.sin(phi_mesh) * np.cos(theta_mesh)
-            y = self.earth_radius * np.sin(phi_mesh) * np.sin(theta_mesh)
-            z = self.earth_radius * np.cos(phi_mesh)
+            x = r * np.sin(phi_mesh) * np.cos(theta_mesh)
+            y = r * np.sin(phi_mesh) * np.sin(theta_mesh)
+            z = r * np.cos(phi_mesh)
 
             # Apply colormap with consistent alpha
             norm = Normalize(vmin=0, vmax=1)
@@ -767,7 +772,7 @@ class Visualiser3D:
             self.fig.canvas.draw_idle()
 
     def update_colorbar(self):
-        """Update colorbar without causing plot resizing"""
+        """Update colorbar without causing layout conflicts"""
         # Only proceed if we have data to show
         has_nominal = len(self.heatmap_data) > 0
         has_thrust = hasattr(self, 'thrust_heatmap_data') and len(self.thrust_heatmap_data) > 0
@@ -777,6 +782,9 @@ class Visualiser3D:
             if hasattr(self, 'heatmap_cbar') and self.heatmap_cbar is not None:
                 self.heatmap_cbar.remove()
                 self.heatmap_cbar = None
+            if hasattr(self, 'thrust_heatmap_cbar') and self.thrust_heatmap_cbar is not None:
+                self.thrust_heatmap_cbar.remove()
+                self.thrust_heatmap_cbar = None
             return
 
         # Get current axis limits to preserve them
@@ -784,51 +792,68 @@ class Visualiser3D:
         ylim = self.ax_full.get_ylim()
         zlim = self.ax_full.get_zlim()
 
-        # Create/update colorbar without removing it (preserves layout)
+        # Set layout parameters once at initialization
+        if not hasattr(self, '_layout_initialized'):
+            # self.fig.subplots_adjust(right=0.80)  # Permanent space for colorbars
+            self._layout_initialized = True
+
+        # Create/update colorbar without changing layout engine
         if not hasattr(self, 'heatmap_cbar') or self.heatmap_cbar is None:
-            # Initial creation
-            if has_nominal and has_thrust:
+            if has_nominal:
                 sm_nominal = plt.cm.ScalarMappable(cmap=self.heatmap_cmap, norm=plt.Normalize(vmin=0, vmax=1))
+                self.heatmap_cbar = self.fig.colorbar(
+                    sm_nominal,
+                    ax=self.ax_full,
+                    orientation='horizontal',
+                    pad=0.1,
+                    label='Nominal Crash Probability'
+                )
+                # self.heatmap_cbar.ax.set_position([0.0, 0.0, 0.0, 0.0])
+
+            if has_thrust:
                 sm_thrust = plt.cm.ScalarMappable(cmap=self.thrust_heatmap_cmap, norm=plt.Normalize(vmin=0, vmax=1))
-                self.heatmap_cbar = self.fig.colorbar(
-                    [sm_nominal, sm_thrust],
+                self.thrust_heatmap_cbar = self.fig.colorbar(
+                    sm_thrust,
                     ax=self.ax_full,
                     orientation='vertical',
-                    pad=0.05,
-                    label='Crash Probability'
+                    pad=0.15,
+                    label='Thruster Crash Probability'
                 )
-                # Add labels
-                self.heatmap_cbar.ax.text(0.5, 1.05, 'Nominal', ha='center', va='bottom')
-                self.heatmap_cbar.ax.text(0.5, -0.05, 'Thruster', ha='center', va='top')
-            else:
-                cmap = self.heatmap_cmap if has_nominal else self.thrust_heatmap_cmap
-                label = 'Nominal' if has_nominal else 'Thruster'
-                sm = plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(vmin=0, vmax=1))
-                self.heatmap_cbar = self.fig.colorbar(
-                    sm,
-                    ax=self.ax_full,
-                    orientation='vertical',
-                    pad=0.05,
-                    label=f'{label} Crash Probability'
-                )
+                # self.thrust_heatmap_cbar.ax.set_position([0.85, 0.05, 0.03, 0.40])
         else:
-            # Just update the existing colorbar
-            if has_nominal and has_thrust:
+            # Update existing colorbars
+            if has_nominal:
                 self.heatmap_cbar.mappable.set_cmap(self.heatmap_cmap)
-                self.heatmap_cbar.set_label('Crash Probability')
-            else:
-                cmap = self.heatmap_cmap if has_nominal else self.thrust_heatmap_cmap
-                label = 'Nominal' if has_nominal else 'Thruster'
-                self.heatmap_cbar.mappable.set_cmap(cmap)
-                self.heatmap_cbar.set_label(f'{label} Crash Probability')
+                self.heatmap_cbar.set_label('Nominal Crash Probability')
+                # self.heatmap_cbar.ax.set_position([0.85, 0.50, 0.03, 0.45])
+            elif hasattr(self, 'heatmap_cbar') and self.heatmap_cbar is not None:
+                self.heatmap_cbar.remove()
+                self.heatmap_cbar = None
+
+            if has_thrust:
+                if not hasattr(self, 'thrust_heatmap_cbar') or self.thrust_heatmap_cbar is None:
+                    sm_thrust = plt.cm.ScalarMappable(cmap=self.thrust_heatmap_cmap, norm=plt.Normalize(vmin=0, vmax=1))
+                    self.thrust_heatmap_cbar = self.fig.colorbar(
+                        sm_thrust,
+                        ax=self.ax_full,
+                        orientation='vertical',
+                        pad=0.05,
+                        label='Thruster Crash Probability'
+                    )
+                self.thrust_heatmap_cbar.mappable.set_cmap(self.thrust_heatmap_cmap)
+                self.thrust_heatmap_cbar.set_label('Thruster Crash Probability')
+                # self.thrust_heatmap_cbar.ax.set_position([0.85, 0.05, 0.03, 0.40])
+            elif hasattr(self, 'thrust_heatmap_cbar') and self.thrust_heatmap_cbar is not None:
+                self.thrust_heatmap_cbar.remove()
+                self.thrust_heatmap_cbar = None
 
         # Restore original axis limits
         self.ax_full.set_xlim(xlim)
         self.ax_full.set_ylim(ylim)
         self.ax_full.set_zlim(zlim)
 
-        # Use tight_layout to prevent shrinking
-        self.fig.tight_layout()
+        # Manual adjustment instead of layout engine
+        # self.fig.tight_layout(rect=[0, 0, 0.85, 1])  # Leave 15% space on right for colorbars
 
     def on_key_press(self, event):
         if event.key == 't':

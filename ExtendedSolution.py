@@ -129,5 +129,5 @@ with open("ekf_predicted_trajectory_3d.txt", 'w') as f:
 vis = Visualiser3D("trajectory_without_noise_3d.txt", "ekf_predicted_trajectory_3d.txt", "crash_heatmap_data_3d.txt", mode='prewritten')
 vis.visualise()
 
-vis_thrust = Visualiser3D("trajectory_without_noise_3d.txt", "ekf_predicted_trajectory_3d.txt", "crash_heatmap_data_3d_thrust.txt", mode='prewritten')
+vis_thrust = Visualiser3D("trajectory_without_noise_3d.txt", "ekf_predicted_trajectory_3d.txt", "crash_heatmap_data_3d.txt", "crash_heatmap_data_3d_thrust.txt", mode='prewritten')
 vis_thrust.visualise()
