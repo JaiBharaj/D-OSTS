@@ -1,40 +1,42 @@
-import numpy as np
+import WriteToFiles
+import RadarModule
+from RadarModule import *
 from CrudeInitialConditions import InitialConditions as IC
 from NumericalIntegrator import Integrator
-from RadarModule import distribute_radars2D, initialise_radar_stations, combine_radar_measurements
-from WriteToFiles import write_to_file_2d
 
 
-mode = '2d'
-H_dark = 20000
+def run_simulator(mode, recorded_times=np.linspace(0, 6000, 6001)):
+    input_path = f"Trajectories/{mode}_{IC.index}_true_trajectory.txt"
+    output_path = f"Trajectories/{mode}_{IC.index}_noisy_trajectory.txt"
+    write_to_file = getattr(WriteToFiles, f"write_to_file_{mode}")
 
-########## GENERATING TRUE TRAJECTORY ##########
-input_path = f"Trajectories/{IC.index}_2d_true_trajectory.txt"
-output_path = f"Trajectories/{IC.index}_2d_noisy_trajectory.txt"
+    ### GET TRUE TRAJECTORY ###
+    rk = Integrator(recorded_times)
+    get_trajectory = getattr(rk, f"get_trajectory_{mode}")
+    true_traj = get_trajectory()
+    write_to_file(input_path, true_traj)
 
-rk = Integrator(np.linspace(0,6000, 6001))
-true_traj = rk.get_trajectory_2d(input_path)
+    ### NOISY RADAR MEASUREMENTS ###
+    H_dark = 20000  # Possible for no radars to see satellite below this height
+    distribute_radars = getattr(RadarModule, f"distribute_radars{mode.upper()}")
+    radar_positions = distribute_radars(H_dark, IC.earthRadius)
 
-# optional
-write_to_file_2d(input_path, true_traj)
+    # Initialise radar stations
+    radars = initialise_radar_stations(mode, radar_positions)
 
-########## RADAR STATION NOISY MEASUREMENTS ##########
-H_dark = 20000  # Possible for no radars to see satellite below this height
-radar_positions = distribute_radars2D(H_dark, IC.earthRadius)
+    # Record satellite positions in each radar
+    for measurement in true_traj:
+        sat_pos = measurement[1:]
+        for radar in radars:
+            radar.record_satellite(measurement[0], sat_pos)
 
-# Initialise radar stations
-radars = initialise_radar_stations(mode, radar_positions)
-
-# Record satellite positions in each radar
-for time, r, theta in true_traj:
-    sat_pos = [r, theta]
+    # Add measurement noise
     for radar in radars:
-        radar.record_satellite(time, sat_pos)
+        radar.add_noise()
 
-# Add measurement noise
-for radar in radars:
-    radar.add_noise()
+    # Combine measurements from all radars and write to file
+    noisy_traj = combine_radar_measurements(mode, radars, true_traj)
+    write_to_file(output_path, noisy_traj)
 
-# Combine measurements from all radars
-noisy_traj = combine_radar_measurements(mode, radars, true_traj)
-write_to_file_2d(output_path, noisy_traj)
+run_simulator('3d')
+
