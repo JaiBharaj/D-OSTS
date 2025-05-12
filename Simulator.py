@@ -1,7 +1,7 @@
-from dosts import *
-from dosts import InitialConditions as IC
-from dosts import Integrator
+from dosts import CrudeInitialConditions, NumericalIntegrator, RadarModule, WriteToFiles
 
+IC = CrudeInitialConditions.InitialConditions
+Integrator = NumericalIntegrator.Integrator
 
 def run_simulator(mode, recorded_times=np.linspace(0, 6000, 6001)):
     input_path = f"Trajectories/{mode}_{IC.index}_true_trajectory.txt"
@@ -20,7 +20,7 @@ def run_simulator(mode, recorded_times=np.linspace(0, 6000, 6001)):
     radar_positions = distribute_radars(H_dark, IC.earthRadius)
 
     # Initialise radar stations
-    radars = initialise_radar_stations(mode, radar_positions)
+    radars = RadarModule.initialise_radar_stations(mode, radar_positions)
 
     # Record satellite positions in each radar
     for measurement in true_traj:
@@ -33,7 +33,7 @@ def run_simulator(mode, recorded_times=np.linspace(0, 6000, 6001)):
         radar.add_noise()
 
     # Combine measurements from all radars and write to file
-    noisy_traj = combine_radar_measurements(mode, radars, true_traj)
+    noisy_traj = RadarModule.combine_radar_measurements(mode, radars, true_traj)
     write_to_file(output_path, noisy_traj)
 
 run_simulator('3d')
