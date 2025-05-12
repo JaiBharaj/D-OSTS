@@ -13,7 +13,7 @@ input_file = f"Trajectories/{IC.index}_2d_noisy_trajectory.txt"
 output_file = f"Trajectories/{IC.index}_2d_pred_trajectory.txt"
 uncertainty_file = f"Trajectories/{IC.index}_2d_pred_uncertainty.txt"
 
-# Initial paramteres
+# Initial parameteres
 r0 = IC.earthRadius + IC.initSatAlt
 theta0 = IC.initSatTheta
 

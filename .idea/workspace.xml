@@ -13,8 +13,8 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="Python Script" />
         <option value="HTML File" />
+        <option value="Python Script" />
       </list>
     </option>
   </component>
@@ -73,6 +73,7 @@
 }</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\Jaigovind Bharaj\PycharmProjects\RHESSI\dosts" />
       <recent name="C:\Users\Jaigovind Bharaj\PycharmProjects\RHESSI\Visualiser Testing" />
     </key>
   </component>
@@ -104,7 +105,7 @@
       <workItem from="1746697663132" duration="8994000" />
       <workItem from="1746720102045" duration="9138000" />
       <workItem from="1746873255331" duration="34220000" />
-      <workItem from="1747043502824" duration="10115000" />
+      <workItem from="1747043502824" duration="10938000" />
     </task>
     <task id="LOCAL-00001" summary="Moved to seperate folder to keep neat when testing">
       <option name="closed" value="true" />
