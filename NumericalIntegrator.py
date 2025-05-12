@@ -5,7 +5,7 @@ from scipy.integrate import solve_ivp
 
 class Integrator:
 
-    def __init__(self):
+    def __init__(self, recorded_times=None):
         self.Re = InitialConditions.earthRadius
         self.alt0 = InitialConditions.initSatAlt
         self.r0 = self.Re + self.alt0
@@ -15,6 +15,8 @@ class Integrator:
         self.r_dot0 = InitialConditions.initSatRdot
         self.phi_dot0 = InitialConditions.initSatPhidot
         self.mu = InitialConditions.gravConstant * InitialConditions.earthMass
+
+        self.recorded_times = recorded_times
 
         v_circ = np.sqrt(self.mu / self.r0)
         v_target = v_circ - InitialConditions.deltaV
@@ -78,6 +80,7 @@ class Integrator:
             rtol=1e-6,
             atol=1e-8,
             method="RK45",
+            t_eval=self.recorded_times,
             first_step=1.0,
             max_step=5.0,
             events=self.hit_ground())
@@ -90,6 +93,7 @@ class Integrator:
             (0.0, 1.3e8),
             self.y0,
             method="RK45",
+            t_eval=self.recorded_times,
             rtol=1e-7, 
             atol=1e-9,
             first_step=1.0, 
@@ -141,16 +145,7 @@ class Integrator:
         r_arr = res.y[0]
         th_arr = res.y[2]
 
-        # -------- Optional ----------
-        # keep = self.downsample_indices(len(t_arr), n_save)
-        # t_arr, r_arr, th_arr = t_arr[keep], r_arr[keep], th_arr[keep]
-
-        # -------- File output ----------
-        true_file = 'trajectory_without_noise.txt'
-
-        with open(true_file, 'w') as f_true:
-            for (t, r, th) in zip(t_arr, r_arr, th_arr):
-                f_true.write(f"{t} {r} {th}\n")
+        return np.array([t_arr, r_arr, th_arr]).T
 
     def get_trajectory_3d(self, n_save=20_000, to_xyz=False, bonus=False):
         # traj without thrust
@@ -219,23 +214,7 @@ class Integrator:
         phi_arr = res.y[2]
         lam_arr = res.y[4]
 
-        # ------ option ------
-        # keep = self.downsample_indices(len(t_arr), n_save)
-        # t_arr, r_arr, phi_arr, lam_arr = t_arr[keep], r_arr[keep], phi_arr[keep], lam_arr[keep]
-
-        fname = 'trajectory_without_noise_3d_xyz.txt' if to_xyz else 'trajectory_without_noise_3d.txt'
-        with open(fname, 'w') as f:
-            if to_xyz:
-                x = r_arr * np.sin(phi_arr) * np.cos(lam_arr)
-                y = r_arr * np.sin(phi_arr) * np.sin(lam_arr)
-                z = r_arr * np.cos(phi_arr)
-                for t, xi, yi, zi in zip(t_arr, x, y, z):
-                    f.write(f"{t:.3f} {xi:.3f} {yi:.3f} {zi:.3f}\n")
-            else:
-                for t, r, ph, la in zip(t_arr, r_arr, phi_arr, lam_arr):
-                    f.write(f"{t:.3f} {r:.3f} {ph:.6f} {la:.6f}\n")
-
-        print(f"Wrote {len(t_arr)} points to {fname}")
+        return np.array([t_arr, r_arr, phi_arr, lam_arr])
 
 
 # ------ An example to use this class ------
