@@ -1,0 +1,16 @@
+[project]
+name = "dosts"
+version = "1.0.0"
+description = "A Python-based De-Orbiting Satellite Tracking System (D-OSTS)"
+readme = "README.md"
+requires-python = ">=3.7"
+license = {text = "MIT"}
+authors = [{ name = "Jai Bharaj", email = "you@example.com" }]
+dependencies = []
+
+[project.scripts]
+dosts = "dosts.__main__:main"  # optional, for CLI use
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"

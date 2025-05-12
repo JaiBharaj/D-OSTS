@@ -1,7 +1,6 @@
-from dosts import WriteToFiles, RadarModule
-from dosts.RadarModule import *
-from dosts.CrudeInitialConditions import InitialConditions as IC
-from dosts.NumericalIntegrator import Integrator
+from dosts import *
+from dosts import InitialConditions as IC
+from dosts import Integrator
 
 
 def run_simulator(mode, recorded_times=np.linspace(0, 6000, 6001)):
