@@ -10,6 +10,7 @@ class InitialConditions:
     gravConstant = 6.67E-11
     
     # initial values of satellite
+    deltaV = 80.0
     initSatAlt = 400000
     initSatTheta = 0.0
     initSatPhi = np.pi / 2  # equatorial
@@ -26,5 +27,4 @@ class InitialConditions:
         (np.radians(34.0522), np.radians(-118.2437)), # Los Angeles
     ]
     hThrust = 100000     # height of thrust (m)
-    deltaV = 150     # velocity increasing value (m/s)
-
+    deltaV_from_thrust = 200     # velocity increasing value (m/s)
