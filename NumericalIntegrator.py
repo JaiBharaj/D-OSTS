@@ -17,7 +17,7 @@ class Integrator:
         self.mu = InitialConditions.gravConstant * InitialConditions.earthMass
 
         v_circ = np.sqrt(self.mu / self.r0)
-        v_target = v_circ - 80.0
+        v_target = v_circ - InitialConditions.deltaV
         term_sq = v_target ** 2 - (self.r0 * self.phi_dot0) ** 2
         if term_sq < 0:
             raise ValueError("phi_dot0 too large for given Δv or orbit height")
@@ -32,7 +32,7 @@ class Integrator:
         ], dtype=float)
 
         # Bonus
-        self.delta_v = InitialConditions.deltaV
+        self.delta_v_thrust = InitialConditions.deltaV_from_thrust
         self.h_thrust = InitialConditions.hThrust
         self.populated_radius = InitialConditions.populatedRadius
         self.populated_centers = InitialConditions.populatedCenters
@@ -181,7 +181,7 @@ class Integrator:
             e_lam   = Integrator.sph_to_cart(1, np.pi/2, lam+np.pi/2)
             v_vec = vr*e_r + r*vphi*e_phi + r*np.sin(phi)*vlam*e_lam
             v_hat = v_vec / np.linalg.norm(v_vec)
-            v_vec_new = v_vec + self.delta_v * v_hat
+            v_vec_new = v_vec + self.delta_v_thrust * v_hat
 
             # new velocity after thrust
             vr_new   = np.dot(v_vec_new, e_r)
