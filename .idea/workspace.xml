@@ -5,11 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="fe963f24-9a54-4832-9b6d-c0a8cc3c9355" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/dosts/__main__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dosts/LICENSE" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Predictor.py" beforeDir="false" afterPath="$PROJECT_DIR$/Predictor.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Simulator.py" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dosts/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/dosts/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Docs/Tutorial/index.md" beforeDir="false" afterPath="$PROJECT_DIR$/Docs/Tutorial/index.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -55,29 +53,29 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "DefaultHtmlFileTemplate": "HTML File",
-    "JavaScript Debug.RHESSI_D-OSTS.html.executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "Python.BaselineSolution.executor": "Run",
-    "Python.ExtendedSolution.executor": "Run",
-    "Python.FakeTrajectoryGenerator.executor": "Run",
-    "Python.FakeTrajectoryGenerator3D.executor": "Run",
-    "Python.Visualiser.executor": "Run",
-    "Python.__init__.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "Final",
-    "ignore.virus.scanning.warn.message": "true",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
+    &quot;JavaScript Debug.RHESSI_D-OSTS.html.executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Python.BaselineSolution.executor&quot;: &quot;Run&quot;,
+    &quot;Python.ExtendedSolution.executor&quot;: &quot;Run&quot;,
+    &quot;Python.FakeTrajectoryGenerator.executor&quot;: &quot;Run&quot;,
+    &quot;Python.FakeTrajectoryGenerator3D.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Visualiser.executor&quot;: &quot;Run&quot;,
+    &quot;Python.__init__.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;Final&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\Jaigovind Bharaj\PycharmProjects\RHESSI\dosts" />
@@ -113,7 +111,7 @@
       <workItem from="1746697663132" duration="8994000" />
       <workItem from="1746720102045" duration="9138000" />
       <workItem from="1746873255331" duration="34220000" />
-      <workItem from="1747043502824" duration="14632000" />
+      <workItem from="1747043502824" duration="16797000" />
     </task>
     <task id="LOCAL-00001" summary="Moved to seperate folder to keep neat when testing">
       <option name="closed" value="true" />
