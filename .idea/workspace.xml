@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="fe963f24-9a54-4832-9b6d-c0a8cc3c9355" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/CoordinateTransformations.py" beforeDir="false" afterPath="$PROJECT_DIR$/CoordinateTransformations.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Visualiser.py" beforeDir="false" afterPath="$PROJECT_DIR$/Visualiser.py" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+        <option value="HTML File" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="Pre-Dev" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;JaiBharaj&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/JaiBharaj/RHESSI.git&quot;,
+    &quot;accountId&quot;: &quot;e22729db-27e7-411e-b597-eb266fb651c5&quot;
+  }
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 1
+}</component>
+  <component name="ProjectId" id="2waYoxrFndZR8FrmVQpzaptGygQ" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "DefaultHtmlFileTemplate": "HTML File",
+    "JavaScript Debug.RHESSI_D-OSTS.html.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Python.BaselineSolution.executor": "Run",
+    "Python.ExtendedSolution.executor": "Run",
+    "Python.FakeTrajectoryGenerator.executor": "Run",
+    "Python.FakeTrajectoryGenerator3D.executor": "Run",
+    "Python.Visualiser.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "Final",
+    "ignore.virus.scanning.warn.message": "true",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\Jaigovind Bharaj\PycharmProjects\RHESSI\Visualiser Testing" />
+    </key>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-f27c65a3e318-JavaScript-PY-251.23774.444" />
+        <option value="bundled-python-sdk-890ed5b35930-d9c5bdb153f4-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-251.23774.444" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="fe963f24-9a54-4832-9b6d-c0a8cc3c9355" name="Changes" comment="" />
+      <created>1746281331512</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1746281331512</updated>
+      <workItem from="1746281333089" duration="14264000" />
+      <workItem from="1746358092378" duration="6889000" />
+      <workItem from="1746365165453" duration="5931000" />
+      <workItem from="1746381906721" duration="2493000" />
+      <workItem from="1746472071075" duration="4200000" />
+      <workItem from="1746478060593" duration="2077000" />
+      <workItem from="1746480710720" duration="789000" />
+      <workItem from="1746533005893" duration="1280000" />
+      <workItem from="1746609638971" duration="2536000" />
+      <workItem from="1746635869846" duration="10174000" />
+      <workItem from="1746697663132" duration="8994000" />
+      <workItem from="1746720102045" duration="9138000" />
+      <workItem from="1746873255331" duration="34220000" />
+      <workItem from="1747043502824" duration="7497000" />
+    </task>
+    <task id="LOCAL-00001" summary="Moved to seperate folder to keep neat when testing">
+      <option name="closed" value="true" />
+      <created>1746282531178</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1746282531178</updated>
+    </task>
+    <task id="LOCAL-00002" summary="2D visualiser tests done in Class form - working!">
+      <option name="closed" value="true" />
+      <created>1746283455089</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1746283455089</updated>
+    </task>
+    <task id="LOCAL-00003" summary="2D visualiser has an added overlay to better describe the position of the satellite.&#10;&#10;3D visualiser officially working! Try not to run while having other applications open - it has crashed a couple times.">
+      <option name="closed" value="true" />
+      <created>1746295199408</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1746295199408</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Both visualisers have been altered to improve speed and add more customisation. Unfortunately, the 3D visualiser is limited by my laptop (it's very old and slow) so a small 'sleep' inbetween data loading is still required for useful visualisations.&#10;&#10;Note the use of queues to improve performance and limit the printable trajectory.">
+      <option name="closed" value="true" />
+      <created>1746363368218</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1746363368218</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="OPEN_GENERIC_TABS">
+      <map>
+        <entry key="ab07ec1d-4e87-4f8a-bf9e-fb2a00d3926c" value="TOOL_WINDOW" />
+      </map>
+    </option>
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="Pre-Dev" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
+          </value>
+        </entry>
+        <entry key="ab07ec1d-4e87-4f8a-bf9e-fb2a00d3926c">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Moved to seperate folder to keep neat when testing" />
+    <MESSAGE value="2D visualiser tests done in Class form - working!" />
+    <MESSAGE value="2D visualiser has an added overlay to better describe the position of the satellite.&#10;&#10;3D visualiser officially working! Try not to run while having other applications open - it has crashed a couple times." />
+    <MESSAGE value="Both visualisers have been altered to improve speed and add more customisation. Unfortunately, the 3D visualiser is limited by my laptop (it's very old and slow) so a small 'sleep' inbetween data loading is still required for useful visualisations.&#10;&#10;Note the use of queues to improve performance and limit the printable trajectory." />
+    <option name="LAST_COMMIT_MESSAGE" value="Both visualisers have been altered to improve speed and add more customisation. Unfortunately, the 3D visualiser is limited by my laptop (it's very old and slow) so a small 'sleep' inbetween data loading is still required for useful visualisations.&#10;&#10;Note the use of queues to improve performance and limit the printable trajectory." />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/Visualiser.py</url>
+          <line>599</line>
+          <option name="timeStamp" value="3" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/RHESSI$FakeTrajectoryGenerator.coverage" NAME="FakeTrajectoryGenerator Coverage Results" MODIFIED="1746361600737" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Visualiser Testing" />
+    <SUITE FILE_PATH="coverage/RHESSI$FakeTrajectoryGenerator3D.coverage" NAME="FakeTrajectoryGenerator3D Coverage Results" MODIFIED="1746534571080" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Visualiser Testing" />
+    <SUITE FILE_PATH="coverage/RHESSI$ExtendedSolution.coverage" NAME="ExtendedSolution Coverage Results" MODIFIED="1747043629810" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/RHESSI$BaselineSolution.coverage" NAME="BaselineSolution Coverage Results" MODIFIED="1747044514248" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/RHESSI$Visualiser.coverage" NAME="Visualiser Coverage Results" MODIFIED="1746534573658" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Visualiser Testing" />
+  </component>
+</project>

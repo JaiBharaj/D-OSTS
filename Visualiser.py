@@ -1,21 +1,20 @@
 import time
 import numpy as np
+
 import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 from matplotlib.colors import Normalize
 from matplotlib import colors as mcolors
-from scipy.ndimage import gaussian_filter
-from scipy.stats import gaussian_kde
-from matplotlib import cm
-import matplotlib.animation as animation
 from matplotlib.patches import Polygon, Wedge
-from CrudeInitialConditions import InitialConditions
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
-from scipy.interpolate import griddata
+
 import threading
 from queue import Queue, Empty
 from collections import deque
+from CrudeInitialConditions import InitialConditions
+from CoordinateTransformations import polar_to_cartesian, spherical_to_cartesian
 
 class Visualiser2D:
     def __init__(self, trajectory_file_path, prediction_file_path, heatmap_file_path=None, measurement_times=None, break_point=0, mode='prewritten'):
@@ -126,18 +125,17 @@ class Visualiser2D:
             angle_rad = np.deg2rad(angle_deg)
 
             # Coordinates for the tick position on the edge of the circle
-            x_tick = self.earth_radius * np.cos(angle_rad)
-            y_tick = self.earth_radius * np.sin(angle_rad)
+            x_tick, y_tick = polar_to_cartesian(self.earth_radius, angle_rad)
 
             # Draw tick
             tick_length = - 0.01 * self.earth_radius  # -1.0 for insisde
-            tick_x = [x_tick, x_tick + tick_length * np.cos(angle_rad)]
-            tick_y = [y_tick, y_tick + tick_length * np.sin(angle_rad)]
+            tick_mult_x, tick_mult_y = polar_to_cartesian(tick_length, angle_rad)
+            tick_x = [x_tick, x_tick + tick_mult_x]
+            tick_y = [y_tick, y_tick + tick_mult_y]
             ax.plot(tick_x, tick_y, color='black', lw=2, zorder=2)
 
             # Add angle label
-            label_x = self.earth_radius * 0.85 * np.cos(angle_rad)
-            label_y = self.earth_radius * 0.85 * np.sin(angle_rad)
+            label_x, label_y = polar_to_cartesian(self.earth_radius * 0.85, angle_rad)
             ax.text(label_x, label_y, f'{int(angle_deg)}°', color='black', ha='center', va='center', fontsize=10)
 
     def on_key_press(self, event):
@@ -160,8 +158,7 @@ class Visualiser2D:
                 for line in f:
                     try:
                         _, r, theta = map(float, line.strip().split())
-                        x = r * np.cos(theta)
-                        y = r * np.sin(theta)
+                        x, y = polar_to_cartesian(r, theta)
                         yield x, y
                         # time.sleep(0.05)  # Simulate streaming delay
                     except ValueError:
@@ -176,8 +173,7 @@ class Visualiser2D:
                         continue
                     try:
                         _, r, theta = map(float, line.strip().split())
-                        x = r * np.cos(theta)
-                        y = r * np.sin(theta)
+                        x, y = polar_to_cartesian(r, theta)
                         yield x, y
                     except ValueError:
                         continue
@@ -188,8 +184,7 @@ class Visualiser2D:
                 for line in f:
                     try:
                         time, r, theta, dr, dtheta, is_meas = map(float, line.strip().split())
-                        x = r * np.cos(theta)
-                        y = r * np.sin(theta)
+                        x, y = polar_to_cartesian(r, theta)
                         std_x = np.sqrt((dr * np.cos(theta)) ** 2 + (r * dtheta * np.sin(theta)) ** 2)
                         std_y = np.sqrt((dr * np.sin(theta)) ** 2 + (r * dtheta * np.cos(theta)) ** 2)
                         yield time, x, y, std_x, std_y, int(is_meas)
@@ -206,8 +201,7 @@ class Visualiser2D:
                         continue
                     try:
                         time, r, theta, dr, dtheta, is_meas = map(float, line.strip().split())
-                        x = r * np.cos(theta)
-                        y = r * np.sin(theta)
+                        x, y = polar_to_cartesian(r, theta)
                         std_x = np.sqrt((dr * np.cos(theta)) ** 2 + (r * dtheta * np.sin(theta)) ** 2)
                         std_y = np.sqrt((dr * np.sin(theta)) ** 2 + (r * dtheta * np.cos(theta)) ** 2)
                         yield time, x, y, std_x, std_y, int(is_meas)
@@ -533,8 +527,7 @@ class Visualiser3D:
         self.setup_plots()
         self.ax_zoom.figure.canvas.mpl_connect('draw_event', on_draw)
         self.fig.canvas.mpl_connect('key_press_event', self.on_key_press)
-        # self.ax_full.set_autoscale_on(False)  # Disable automatic scaling
-        self.fixed_limits = (-7E+6, 7E+6)  # Match your initial plot_radius
+        self.fixed_limits = (-7E+6, 7E+6)  # Match initial plot_radius
 
     def setup_plots(self):
         # Create 3D figure with two subplots
@@ -606,9 +599,7 @@ class Visualiser3D:
         # Create a sphere for Earth
         u = np.linspace(0, 2 * np.pi, 100)
         v = np.linspace(0, np.pi, 100)
-        x = self.earth_radius * np.outer(np.cos(u), np.sin(v))
-        y = self.earth_radius * np.outer(np.sin(u), np.sin(v))
-        z = self.earth_radius * np.outer(np.ones(np.size(u)), np.cos(v))
+        x, y, z = spherical_to_cartesian(self.earth_radius, u, v)
 
         # Plot Earth surface
         ax.plot_surface(x, y, z, color='gray', alpha=0.3)
@@ -622,9 +613,7 @@ class Visualiser3D:
         phi = np.linspace(0, np.pi, 100)
 
         for t in theta[:-1]:
-            x = self.earth_radius * np.cos(t) * np.sin(phi)
-            y = self.earth_radius * np.sin(t) * np.sin(phi)
-            z = self.earth_radius * np.cos(phi)
+            x, y, z = spherical_to_cartesian(self.earth_radius, t, phi)
             ax.plot(x, y, z, color='black', alpha=0.6, linewidth=0.5)
 
         # Latitude lines (parallels)
@@ -632,17 +621,15 @@ class Visualiser3D:
         theta = np.linspace(0, 2 * np.pi, 100)
 
         for p in phi[1:-1]:
-            x = self.earth_radius * np.cos(theta) * np.sin(p)
-            y = self.earth_radius * np.sin(theta) * np.sin(p)
-            z = self.earth_radius * np.cos(p) * np.ones_like(theta)
+            x, y, z = spherical_to_cartesian(self.earth_radius, theta, p)
+            z *= np.ones_like(theta)
             ax.plot(x, y, z, color='black', alpha=0.6, linewidth=0.5)
 
         # Labels for longitudinal lines
         label_angles = [0, 90, 180, 270]
         for angle in label_angles:
             rad = np.deg2rad(angle)
-            x = self.earth_radius * 1.05 * np.cos(rad)
-            y = self.earth_radius * 1.05 * np.sin(rad)
+            x, y = polar_to_cartesian(self.earth_radius * 1.05, rad)
             z = 0
             ax.text(x, y, z, f'{angle}°', color='black', fontsize=8, ha='center', va='center')
 
@@ -650,8 +637,7 @@ class Visualiser3D:
         label_lats = [0, 30, 60, -30, -60]
         for lat in label_lats:
             rad = np.deg2rad(lat)
-            z = self.earth_radius * np.cos(rad)
-            r = self.earth_radius * np.sin(rad)
+            z, r = polar_to_cartesian(self.earth_radius, rad)
             x = r * 1.05
             y = 0
             ax.text(x, y, z, f'{lat}°', color='black', fontsize=8, ha='center', va='center')
@@ -711,8 +697,8 @@ class Visualiser3D:
 
             # Convert to numpy array and fix coordinate ranges
             points_array = np.array(current_points)
-            thetas = -points_array[:, 0] % (2 * np.pi)  # Wrap theta to [0, 2π]
-            phis = -points_array[:, 1] % np.pi  # Wrap phi to [0, π]
+            thetas = points_array[:, 0] % (2 * np.pi)  # Wrap theta to [0, 2π]
+            phis = np.abs(points_array[:, 1]) % np.pi  # Wrap phi to [0, π]
 
             # Create grid for density calculation
             theta_grid = np.linspace(0, 2 * np.pi, self.heatmap_resolution)
@@ -742,9 +728,7 @@ class Visualiser3D:
                 r *= 1.02  # 2% lift to float above nominal heatmap
 
             # Create surface coordinates
-            x = r * np.sin(phi_mesh) * np.cos(theta_mesh)
-            y = r * np.sin(phi_mesh) * np.sin(theta_mesh)
-            z = r * np.cos(phi_mesh)
+            x, y, z = spherical_to_cartesian(r, theta_mesh, phi_mesh)
 
             # Apply colormap with consistent alpha
             norm = Normalize(vmin=0, vmax=1)
@@ -772,7 +756,6 @@ class Visualiser3D:
             self.fig.canvas.draw_idle()
 
     def update_colorbar(self):
-        """Update colorbar without causing layout conflicts"""
         # Only proceed if we have data to show
         has_nominal = len(self.heatmap_data) > 0
         has_thrust = hasattr(self, 'thrust_heatmap_data') and len(self.thrust_heatmap_data) > 0
@@ -878,9 +861,7 @@ class Visualiser3D:
                 for line in f:
                     try:
                         _, r, theta, phi = map(float, line.strip().split())
-                        x = r * np.sin(phi) * np.cos(theta)  # phi is polar, theta is azimuthal
-                        y = r * np.sin(phi) * np.sin(theta)
-                        z = r * np.cos(phi)
+                        x, y, z = spherical_to_cartesian(r, theta, phi)
                         yield x, y, z
                         # time.sleep(0.05)  # Simulate streaming delay
                     except ValueError:
@@ -895,20 +876,12 @@ class Visualiser3D:
                         continue
                     try:
                         _, r, theta, phi = map(float, line.strip().split())
-                        x = r * np.sin(theta) * np.cos(phi)
-                        y = r * np.sin(theta) * np.sin(phi)
-                        z = r * np.cos(theta)
+                        x, y, z = spherical_to_cartesian(r, theta, phi)
                         yield x, y, z
                     except ValueError:
                         continue
 
     def read_next_prediction(self):
-        def spherical_to_cartesian(r, theta, phi):
-            x = r * np.sin(phi) * np.cos(theta)
-            y = r * np.sin(phi) * np.sin(theta)
-            z = r * np.cos(phi)
-            return x, y, z
-
         def spherical_uncertainty_to_cartesian(r, theta, phi, dr, dtheta, dphi):
             # Jacobian-based approximation of standard deviations in Cartesian coords
             sx = np.sqrt(
@@ -1151,9 +1124,3 @@ class Visualiser3D:
 
         plt.tight_layout(rect=[0, 0.03, 1, 0.95])
         plt.show()
-
-# vis = Visualiser2D('trajectory.txt', 'predicted_trajectory.txt', break_point=100)
-# vis.visualise()
-
-# vis = Visualiser3D('trajectory_3d.txt', 'predicted_trajectory_3d.txt', break_point=0, MAX_STEPS=100)
-# vis.visualise()
