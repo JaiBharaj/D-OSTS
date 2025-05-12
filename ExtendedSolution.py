@@ -10,7 +10,7 @@ from NumericalIntegrator import Integrator
 from ExtendedKalmanFilters import ExtendedKalmanFilter, compute_F_spherical
 from Visualiser import Visualiser3D
 from PredictorIntegrator import Integrator3D
-
+'''
 # Define here for now
 def proportion_in_populated(crash_samples, integrator):
     count = 0
@@ -153,7 +153,7 @@ with open("ekf_predicted_trajectory_3d.txt", 'w') as f:
         r, theta, phi = x[0], x[2], x[4]
         f.write(f"{t:.6f} {r:.6f} {theta:.8f} {phi:.8f} "
                 f"{np.sqrt(P[0, 0]):.3f} {np.sqrt(P[2, 2]):.3e} {np.sqrt(P[4, 4]):.3e} {int(measured)}\n")
-
+'''
 ########## VISUALISATION ##########
 vis = Visualiser3D("trajectory_without_noise_3d.txt", "ekf_predicted_trajectory_3d.txt", "crash_heatmap_data_3d.txt", mode='prewritten')
 vis.visualise()
