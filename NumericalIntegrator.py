@@ -1,7 +1,8 @@
 import numpy as np
 from scipy.integrate import solve_ivp
 from CrudeInitialConditions import InitialConditions as IC
-from ModelDynamics import PolarAccelerations, SphericalAccelerations, BonusAccelerations
+from ModelDynamics import PolarAccelerations, SphericalAccelerations
+from CoordinateTransformations import spherical_to_cartesian
 
 
 
@@ -131,12 +132,12 @@ class Integrator:
             np.sin(phi1) * np.sin(phi2) +
             np.cos(phi1) * np.cos(phi2) * np.cos(lam1 - lam2)
         )
-        return InitialConditions.earthRadius * Δσ
+        return IC.earthRadius * Δσ
 
     @staticmethod
     def in_populated(phi, lam):
-        for pc in InitialConditions.populatedCenters:
-            if Integrator.great_circle_distance(phi, lam, pc[0], pc[1]) < InitialConditions.populatedRadius:
+        for pc in IC.populatedCenters:
+            if Integrator.great_circle_distance(phi, lam, pc[0], pc[1]) < IC.populatedRadius:
                 return True
         return False
 
@@ -175,9 +176,9 @@ class Integrator:
 
             # velocity vector plus delta v
             r, vr, phi, vphi, lam, vlam = y_thrust
-            e_r = Integrator.sph_to_cart(1, phi, lam)
-            e_phi = Integrator.sph_to_cart(1, phi + np.pi / 2, lam)
-            e_lam = Integrator.sph_to_cart(1, np.pi / 2, lam + np.pi / 2)
+            e_r = np.array(spherical_to_cartesian(1, lam, phi))
+            e_phi = np.array(spherical_to_cartesian(1, lam, phi + np.pi / 2))
+            e_lam = np.array(spherical_to_cartesian(1, lam + np.pi / 2, np.pi / 2))
             v_vec = vr * e_r + r * vphi * e_phi + r * np.sin(phi) * vlam * e_lam
             v_hat = v_vec / np.linalg.norm(v_vec)
             v_vec_new = v_vec + self.delta_v_thrust * v_hat
@@ -218,7 +219,7 @@ class Integrator:
         phi_arr = res.y[2]
         lam_arr = res.y[4]
 
-        return np.array([t_arr, r_arr, phi_arr, lam_arr])
+        return np.array([t_arr, r_arr, lam_arr, phi_arr]).T
 
 
 # ------ An example to use this class ------
@@ -228,5 +229,3 @@ class Integrator:
 
 # integrator = Integrator()
 # integrator.get_trajectory_3d()
-
-# ------ Then you will get a text file named 'trajectory_without_noise_3d.txt' in same path ------
