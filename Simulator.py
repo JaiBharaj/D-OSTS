@@ -1,8 +1,7 @@
-import WriteToFiles
-import RadarModule
-from RadarModule import *
-from CrudeInitialConditions import InitialConditions as IC
-from NumericalIntegrator import Integrator
+from dosts import WriteToFiles, RadarModule
+from dosts.RadarModule import *
+from dosts.CrudeInitialConditions import InitialConditions as IC
+from dosts.NumericalIntegrator import Integrator
 
 
 def run_simulator(mode, recorded_times=np.linspace(0, 6000, 6001)):

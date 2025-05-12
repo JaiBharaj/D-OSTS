@@ -1,10 +1,10 @@
 import numpy as np
-from CrudeInitialConditions import InitialConditions as IC
-from AtmosphericDensity import atmos_ussa1976_rho
-from ModelDynamics import PolarAccelerations
-from ExtendedKalmanFilters import ExtendedKalmanFilter, compute_F_analytic
-from PredictorIntegrator import RK45Integrator
-from WriteToFiles import write_to_file_2d
+from dosts.CrudeInitialConditions import InitialConditions as IC
+from dosts.AtmosphericDensity import atmos_ussa1976_rho
+from dosts.ModelDynamics import PolarAccelerations
+from dosts.ExtendedKalmanFilters import ExtendedKalmanFilter, compute_F_analytic
+from dosts.PredictorIntegrator import RK45Integrator
+from dosts.WriteToFiles import write_to_file_2d
 
 ########## TRAJECTORY PREDICTIONS WITH EXTENDED KALMAN FILTER ##########
 
