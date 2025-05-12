@@ -9,21 +9,48 @@ First, after downloading the source code from the D-OSTS GitHub Repository, ensu
 build tools is installed on your local machine. You can easily do this with 
 `pip install`.
 
-<pre> pip install build </pre>
+```bash
+pip install build
+````
 
 You can then create a `dist/` folder with `.whl` and `.tar.gz` files by using these 
 new build tools.
 
-<pre> python -m build </pre>
+```bash
+python -m build
+```
 
 Once again, using `pip install`, we locally install D-OSTS.
 
-<pre> pip install dist/dosts-1.0.0-py3-none-any.whl </pre>
+```bash
+pip install dist/dosts-1.0.0-py3-none-any.whl
+```
 
 And, that's it, you're ready to start!
 
 ### Dependencies
-### Environment Setup
+### Environment
+Test the environment to see if D-OSTS has installed correctly.
+
+From the interactive shell, this is done simply.
+
+```python
+>>> import sys
+>>> 'dosts' in sys.modules
+True
+```
+
+Alternatively, successful installation can also be tested in-script.
+
+```python
+try:
+    import dosts
+    print("dosts imported successfully")
+except ImportError:
+    print("dosts not installed or failed to import")
+
+```
+
 ### License
 MIT License
 
