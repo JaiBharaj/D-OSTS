@@ -98,6 +98,7 @@ class Integrator:
             (0.0, 1.3e8),
             self.y0,
             method="RK45",
+            t_eval=self.recorded_times,
             rtol=1e-7,
             atol=1e-9,
             first_step=1.0,
