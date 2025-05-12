@@ -1,5 +1,6 @@
 import numpy as np
 from CrudeInitialConditions import InitialConditions
+from CoordinateTransformations import BasicOperations
 
 class ExtendedKalmanFilter:
     """
@@ -129,9 +130,9 @@ class ExtendedKalmanFilter:
             while sample[0] > InitialConditions.earthRadius and steps < max_steps:
                 if not thrust_applied and sample[0] <= InitialConditions.earthRadius + h_thrust:
                     r, vr, phi, vphi, lam, vlam = sample
-                    e_r   = self.integrator.sph_to_cart(1, phi, lam)
-                    e_phi = self.integrator.sph_to_cart(1, phi + np.pi/2, lam)
-                    e_lam = self.integrator.sph_to_cart(1, np.pi/2, lam + np.pi/2)
+                    e_r = np.array(BasicOperations.spherical_to_cartesian(1, lam, phi))
+                    e_phi = np.array(BasicOperations.spherical_to_cartesian(1, lam, phi + np.pi / 2))
+                    e_lam = np.array(BasicOperations.spherical_to_cartesian(1, lam + np.pi / 2, np.pi / 2))
                     v_vec = vr*e_r + r*vphi*e_phi + r*np.sin(phi)*vlam*e_lam
                     v_hat = v_vec / np.linalg.norm(v_vec)
                     v_vec_new = v_vec + delta_v * v_hat
