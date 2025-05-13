@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from CrudeInitialConditions import InitialConditions
 import RadarCombineMeasurements
 from Atmospheric_Density import atmos_ussa1976_rho
@@ -10,7 +9,7 @@ from NumericalIntegrator import Integrator
 from ExtendedKalmanFilters import ExtendedKalmanFilter, compute_F_spherical
 from Visualiser import Visualiser3D
 from PredictorIntegrator import Integrator3D
-'''
+
 # Define here for now
 def proportion_in_populated(crash_samples, integrator):
     count = 0
@@ -97,7 +96,7 @@ crash_theta_stds, crash_phi_stds = [], []
 crash_theta_means_thrust, crash_phi_means_thrust = [], []
 crash_theta_stds_thrust, crash_phi_stds_thrust = [], []
 
-delta_v = 80.0  # m/s
+delta_v = 5000.0  # m/s
 h_thrust = InitialConditions.hThrust  # m
 
 POP_THRESHOLD = 0.25
@@ -122,7 +121,7 @@ for i, (t, z) in enumerate(zip(measurement_times, measurements)):
     covariances.append(P.copy())
     is_measured_flags.append(is_measured)
 
-    if i % 250 == 0:
+    if i % 2500 == 0:
         crash_angles = ekf.crash3D(N=20, max_steps=10000)
         crash_angles_thrust = ekf.crash3D_with_thrust(delta_v=delta_v, h_thrust=h_thrust, N=20, max_steps=10000)
 
@@ -153,7 +152,7 @@ with open("ekf_predicted_trajectory_3d.txt", 'w') as f:
         r, theta, phi = x[0], x[2], x[4]
         f.write(f"{t:.6f} {r:.6f} {theta:.8f} {phi:.8f} "
                 f"{np.sqrt(P[0, 0]):.3f} {np.sqrt(P[2, 2]):.3e} {np.sqrt(P[4, 4]):.3e} {int(measured)}\n")
-'''
+
 ########## VISUALISATION ##########
 vis = Visualiser3D("trajectory_without_noise_3d.txt", "ekf_predicted_trajectory_3d.txt", "crash_heatmap_data_3d.txt", mode='prewritten')
 vis.visualise()
