@@ -1,9 +1,8 @@
 from scipy.integrate import solve_ivp
 from scipy.linalg import expm
-from ExtendedKalmanFilters import compute_F_analytic, compute_F_spherical
-from NumericalIntegrator import Integrator
+from .ExtendedKalmanFilters import compute_F_analytic, compute_F_spherical
+from .NumericalIntegrator import Integrator
 import numpy as np
-
 
 class RK45Integrator:
     def __init__(self, CD, A, m, GM, rho_func):

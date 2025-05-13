@@ -1,7 +1,6 @@
 import numpy as np
-from CrudeInitialConditions import InitialConditions
-from CoordinateTransformations import spherical_to_cartesian
-
+from .CrudeInitialConditions import InitialConditions
+from .CoordinateTransformations import spherical_to_cartesian
 
 class ExtendedKalmanFilter:
     """

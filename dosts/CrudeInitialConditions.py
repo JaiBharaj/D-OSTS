@@ -1,6 +1,5 @@
 import numpy as np
 
-
 class InitialConditions:
     index = 1 # index for keeping track when running different
     dragCoeff = 2

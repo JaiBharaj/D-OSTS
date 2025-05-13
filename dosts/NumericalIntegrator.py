@@ -1,10 +1,8 @@
 import numpy as np
 from scipy.integrate import solve_ivp
-from CrudeInitialConditions import InitialConditions as IC
-from ModelDynamics import PolarAccelerations, SphericalAccelerations
-from CoordinateTransformations import spherical_to_cartesian
-
-
+from .CrudeInitialConditions import InitialConditions as IC
+from .ModelDynamics import PolarAccelerations, SphericalAccelerations
+from .CoordinateTransformations import spherical_to_cartesian
 
 class Integrator:
 

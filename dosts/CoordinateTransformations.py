@@ -1,6 +1,5 @@
 import numpy as np
 
-
 def _to_numpy(*args):
     # Ensure inputs are NumPy arrays (handles scalars and lists)
     return [np.asarray(a) for a in args]
