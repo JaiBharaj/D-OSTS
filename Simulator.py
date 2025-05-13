@@ -1,3 +1,4 @@
+import numpy as np
 from dosts import CrudeInitialConditions, NumericalIntegrator, RadarModule, WriteToFiles
 
 IC = CrudeInitialConditions.InitialConditions
