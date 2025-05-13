@@ -6,7 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="fe963f24-9a54-4832-9b6d-c0a8cc3c9355" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Docs/Tutorial/index.md" beforeDir="false" afterPath="$PROJECT_DIR$/Docs/Tutorial/index.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -115,7 +114,7 @@
       <workItem from="1746697663132" duration="8994000" />
       <workItem from="1746720102045" duration="9138000" />
       <workItem from="1746873255331" duration="34220000" />
-      <workItem from="1747043502824" duration="18162000" />
+      <workItem from="1747043502824" duration="19260000" />
     </task>
     <task id="LOCAL-00001" summary="Moved to seperate folder to keep neat when testing">
       <option name="closed" value="true" />
