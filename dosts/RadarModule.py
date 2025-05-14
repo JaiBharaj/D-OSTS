@@ -87,6 +87,8 @@ class Radar:
         self.__sigma_0 = sigma_0  # baseline error typically 10-50m
         self.__k = k  # scaling factor typically 0.01-0.05 m/km
         self.__noise = None
+        self.__last_measurement_time = -np.inf  # allows the first measurement at time 0
+        self.__measurement_interval = 10  # seconds between measurements
         self.satellite_measurements = {'time': [], 'visibility': [], 'r': [], 'theta': [], 'phi': []}
         if mode.upper() != '2D' and mode.upper() != '3D':
             raise Exception('Mode unclear. Set to 2D or 3D as a string.')
@@ -152,18 +154,30 @@ class Radar:
 
     # method to record satellites position at a time, if not visible then position recorded as 0,0
     def record_satellite(self, time, satellite_position):
+        if time - self.__last_measurement_time < self.__measurement_interval:
+            # Append placeholder data so all lists remain aligned with time
+            self.satellite_measurements['time'].append(time)
+            self.satellite_measurements['visibility'].append(False)
+            self.satellite_measurements['r'].append(np.nan)
+            self.satellite_measurements['theta'].append(np.nan)
+            if self.__mode == '3D':
+                self.satellite_measurements['phi'].append(np.nan)
+            return
+
         if self.__mode == '2D':
             r, theta = satellite_position
             theta = theta % (2 * np.pi)
         elif self.__mode == '3D':
             r, theta, phi = satellite_position
-            theta = theta % np.pi  # theta: polar angle (0 to π)
-            phi = phi % (2 * np.pi)  # phi: azimuthal angle (0 to 2π)
+            theta = theta % np.pi
+            phi = phi % (2 * np.pi)
 
-        # check if satellite is visible by radar station
         visible = self.check_visibility(satellite_position)
         if not visible:
             r, theta, phi = np.nan, np.nan, np.nan
+        else:
+            self.__last_measurement_time = time  # Update only if a visible measurement is taken
+
         self.satellite_measurements['time'].append(time)
         self.satellite_measurements['visibility'].append(visible)
         self.satellite_measurements['r'].append(r)

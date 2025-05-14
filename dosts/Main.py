@@ -34,16 +34,14 @@ IC.populatedCenters = [
 IC.hThrust = 100000  # height of thrust (m)
 IC.deltaV_from_thrust = 200  # velocity increasing value (m/s)
 
-
-
 #=== RUN SIMULATOR/PREDICTOR WITH DESIRED FUNCTIONALITY ===#
 mode = '3d'         # or '3d'
 H_dark = 50_000     # altitude below which satellite may not be visible to any radar
 radar_angle = np.pi/2
 radar_noise_base = 50          # meters
 radar_noise_scalefactor = 0.01   # m/km
-recorded_times = np.linspace(0, 6000, 1201) # this gives evenly spaced measurements at every 5 seconds
-# recorded_times = None
+# recorded_times = np.linspace(0, 9000, 9001) # this gives evenly spaced measurements at every 5 seconds
+recorded_times = None
 
 true_traj_path = f"Trajectories/{IC.index}_{mode}_true_trajectory.txt"
 noisy_traj_path = f"Trajectories/{IC.index}_{mode}_noisy_trajectory.txt"
@@ -51,9 +49,9 @@ noisy_traj_path = f"Trajectories/{IC.index}_{mode}_noisy_trajectory.txt"
 pred_traj_path = f"Trajectories/{IC.index}_{mode}_pred_trajectory.txt"
 pred_uncertainty_path = f"Trajectories/{IC.index}_{mode}_pred_uncertainty.txt"
 
-# run_simulator(mode, H_dark, recorded_times,
-#              radar_angle, radar_noise_base, radar_noise_scalefactor,
- #             true_traj_path, noisy_traj_path)
+run_simulator(mode, H_dark, recorded_times,
+              radar_angle, radar_noise_base, radar_noise_scalefactor,
+              true_traj_path, noisy_traj_path)
 
 run_predictor(mode, noisy_traj_path, pred_traj_path, pred_uncertainty_path)
 
