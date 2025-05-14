@@ -121,8 +121,8 @@ for i, (t, z) in enumerate(zip(measurement_times, measurements)):
     covariances.append(P.copy())
     is_measured_flags.append(is_measured)
 
-    if i % 2500 == 0:
-        crash_angles = ekf.crash3D(N=20, max_steps=10000)
+    if i % 100 == 0:
+        crash_angles = ekf.crash3D(N=100, max_steps=10000)
         crash_angles_thrust = ekf.crash3D_with_thrust(delta_v=delta_v, h_thrust=h_thrust, N=20, max_steps=10000)
 
         with open(crash_heatmap_file, 'a') as f:
