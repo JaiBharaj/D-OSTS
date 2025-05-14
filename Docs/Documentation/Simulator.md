@@ -7,8 +7,8 @@ def run_simulator(mode, H_dark=20_000, recorded_times=np.linspace(0, 6000, 6001)
 
 Simulates the motion of a satellite and generates:
 
-1. Ground-truth trajectory via numerical integration.
-2. Noisy radar measurements using simulated radar stations.
+- Ground-truth trajectory via numerical integration.
+- Noisy radar measurements using simulated radar stations.
 
 Outputs are written to files for later use in prediction and visualization modules.
 
@@ -43,23 +43,23 @@ Outputs are written to files for later use in prediction and visualization modul
 ---
 
 
-1. **Generate True Trajectory**:
+- **Generate True Trajectory**:
 
    * Uses `NumericalIntegrator.Integrator` with the selected mode.
    * Simulates the satellite's physical trajectory in polar or spherical space.
    * Writes to `input_path` using a mode-specific file writer (e.g., `write_to_file_2D`).
 
-2. **Setup Radar Stations**:
+- **Setup Radar Stations**:
 
    * Calls `distribute_radarsMODE()` (e.g., `distribute_radars3D`) to position radars.
    * Initializes radar objects with angle-of-view and noise characteristics.
 
-3. **Simulate Radar Measurements**:
+- **Simulate Radar Measurements**:
 
    * Each radar records satellite positions at given times if within view.
    * Measurement noise is added to simulate real-world uncertainty.
 
-4. **Aggregate and Write Noisy Data**:
+- **Aggregate and Write Noisy Data**:
 
    * Combines radar data into a unified noisy trajectory.
    * Writes to `output_path` using the same file writer.
