@@ -189,7 +189,7 @@ class Radar:
         r_std = self.__sigma_0 + self.__k * distance
         th_std = 0.001
         eps_r = np.random.normal(0, r_std, len(r))
-        eps_th = np.random.normal(0, r_std, len(r))
+        eps_th = np.random.normal(0, th_std, len(r))
         self.__noise = eps_r  # save the noise vector
         self.satellite_measurements['r'] = r + eps_r
         self.satellite_measurements['theta'] = theta_sat + eps_th
