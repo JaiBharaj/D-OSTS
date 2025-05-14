@@ -12,4 +12,4 @@ The project consists of 12 modules.
 [Radar Module](RadarModule.md)\
 [Simulator](Simulator.md)\
 [Visualiser](Visualiser.md)\
-[File Writer](WriteToFiles.md)\
+[File Writer](WriteToFiles.md)
