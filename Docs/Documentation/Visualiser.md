@@ -220,7 +220,7 @@ def visualise(self)
 
 ---
 
-# : `Visualiser3D`
+# `Visualiser3D`
 
 This module defines a `Visualiser3D` class for real-time or scripted visualization of satellite trajectories and predicted paths, including uncertainty volumes and crash probability heatmaps. It is primarily designed for debugging and analyzing satellite orbit simulations in 3D using `matplotlib`.
 
