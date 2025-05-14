@@ -111,21 +111,6 @@ class Integrator:
         return np.linspace(0, n_total - 1, n_target, dtype=int)
 
     @staticmethod
-    def sph_to_cart(r, phi, lam):
-        x = r * np.sin(phi) * np.cos(lam)
-        y = r * np.sin(phi) * np.sin(lam)
-        z = r * np.cos(phi)
-        return np.array([x, y, z])
-
-    @staticmethod
-    def cart_to_sph(vec):
-        x, y, z = vec
-        r = np.linalg.norm(vec)
-        phi = np.arccos(z / r)
-        lam = np.arctan2(y, x)
-        return r, phi, lam
-
-    @staticmethod
     def great_circle_distance(phi1, lam1, phi2, lam2):
         Δσ = np.arccos(
             np.sin(phi1) * np.sin(phi2) +
