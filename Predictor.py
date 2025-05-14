@@ -1,9 +1,9 @@
 import numpy as np
 from CrudeInitialConditions import InitialConditions as IC
-from AtmosphericDensity import atmos_ussa1976_rho
-from ModelDynamics import PolarAccelerations, SphericalAccelerations
-from ExtendedKalmanFilters import ExtendedKalmanFilter, compute_F_analytic, compute_F_spherical
-from PredictorIntegrator import RK45Integrator, Integrator3D
+from dosts.AtmosphericDensity import atmos_ussa1976_rho
+from dosts.ModelDynamics import PolarAccelerations, SphericalAccelerations
+from dosts.ExtendedKalmanFilters import ExtendedKalmanFilter, compute_F_analytic, compute_F_spherical
+from dosts.PredictorIntegrator import RK45Integrator, Integrator3D
 from WriteToFiles import write_to_file_2d, write_to_file_3d
 
 

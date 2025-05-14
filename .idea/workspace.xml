@@ -5,13 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="fe963f24-9a54-4832-9b6d-c0a8cc3c9355" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Demo/Extension/ExtendedPredictor.py" beforeDir="false" afterPath="$PROJECT_DIR$/Demo/Extension/ExtendedPredictor.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Demo/Extension/Trajectories/3d_noisy_trajectory.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Demo/Extension/Trajectories/3d_noisy_trajectory.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Demo/Extension/Trajectories/3d_pred_trajectory.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Demo/Extension/Trajectories/3d_pred_trajectory.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Demo/Extension/Trajectories/3d_true_trajectory.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Demo/Extension/Trajectories/3d_true_trajectory.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dosts/CrudeInitialConditions.py" beforeDir="false" afterPath="$PROJECT_DIR$/dosts/CrudeInitialConditions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dosts/NumericalIntegrator.py" beforeDir="false" afterPath="$PROJECT_DIR$/dosts/NumericalIntegrator.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Docs/Tutorial/index.md" beforeDir="false" afterPath="$PROJECT_DIR$/Docs/Tutorial/index.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -129,7 +123,7 @@
       <workItem from="1746720102045" duration="9138000" />
       <workItem from="1746873255331" duration="34220000" />
       <workItem from="1747043502824" duration="19260000" />
-      <workItem from="1747210827635" duration="7854000" />
+      <workItem from="1747210827635" duration="8995000" />
     </task>
     <task id="LOCAL-00001" summary="Moved to seperate folder to keep neat when testing">
       <option name="closed" value="true" />

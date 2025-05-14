@@ -1,8 +1,9 @@
 from scipy.integrate import solve_ivp
 from scipy.linalg import expm
-from .ExtendedKalmanFilters import compute_F_analytic, compute_F_spherical
-from .NumericalIntegrator import Integrator
+from ExtendedKalmanFilters import compute_F_analytic, compute_F_spherical
+from NumericalIntegrator import Integrator
 import numpy as np
+
 
 class RK45Integrator:
     def __init__(self, CD, A, m, GM, rho_func):
@@ -34,7 +35,7 @@ class RK45Integrator_3D:
 
     def step(self, f, x, dt):
         sol = solve_ivp(lambda t, y: f(y),
-                        (0, dt), x,
+                        (0, dt), x, method='RK45',
                         rtol=1e-6, atol=1e-9,
                         max_step=dt / 10)
         return sol.y[:, -1]

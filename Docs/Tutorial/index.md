@@ -166,6 +166,15 @@ radars = RadarModule.initialise_radar_stations(mode, radar_positions)
 The distribution function handles the placement of the radar stations such that there is full coverage above 
 `H_dark`. See the documentation for a further review.
 ### Full Simulation Build
+We can now write a full build for the simulator. We'll show has this 
+can be done as a reusable function.
+
+NOTE: The following function is not callable from `dosts`, this is only 
+a demonstration of how the simulator can be setup in your environment.
+
+```python
+
+```
 
 ## Prediction
 ### Initialisation

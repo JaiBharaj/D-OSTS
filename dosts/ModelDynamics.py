@@ -1,7 +1,8 @@
 import numpy as np
-from .CrudeInitialConditions import InitialConditions
-from .CoordinateTransformations import *
-from .AtmosphericDensity import atmos_ussa1976_rho as atmospheric_density
+from CrudeInitialConditions import InitialConditions
+from CoordinateTransformations import *
+from AtmosphericDensity import atmos_ussa1976_rho as atmospheric_density
+
 
 class PolarAccelerations:
 
@@ -78,5 +79,79 @@ class SphericalAccelerations(PolarAccelerations):
         u4_dot = - 2 * u2 * u4 / u1 + np.sin(u3) * np.cos(u3) * u6**2 - dt_start * u4 * vel_mag
         u5_dot = u6
         u6_dot = - 2 * u2 * u6 / u1 - 2 * (1 / np.tan(u3)) * u4 * u6 - dt_start * u6 * vel_mag
+
+        return np.array([u1_dot, u2_dot, u3_dot, u4_dot, u5_dot, u6_dot])
+
+
+class BonusAccelerations(SphericalAccelerations):
+    def __init__(self, thrust_impulse=0.0, thrust_time=None):
+        self.thrust_impulse = thrust_impulse  # Fixed impulse in Ns
+        self.thrust_time = thrust_time  # Time at which to apply thrust
+        self.thrust_applied = False  # Track if thrust has been used
+
+    def accelerations(self, t, u1, u2, u3, u4, u5, u6):
+        '''
+        :param t: Current time (needed to check thrust timing)
+        :param u1: Radial Position
+        :param u2: Radial Velocity
+        :param u3: Polar Angular Position
+        :param u4: Polar Angular Velocity
+        :param u5: Azimuthal Angular Position
+        :param u6: Azimuthal Angular Velocity
+
+        :return: [Radial Velocity, Radial Acceleration, Polar Angular Velocity,
+                 Polar Angular Acceleration, Azimuthal Angular Velocity,
+                 Azimuthal Angular Acceleration]
+        '''
+        dt_start = self.drag_start(C_d=InitialConditions.dragCoeff,
+                                   A=InitialConditions.crossSec,
+                                   m=InitialConditions.satMass,
+                                   r=u1)
+
+        vel_mag = self.comb_velocity(u1, u2, u3, u4, u6)
+
+        # Calculate thrust acceleration if it's time to apply thrust
+        thrust_accel = 0.0
+        if (self.thrust_time is not None and
+                t >= self.thrust_time and
+                not self.thrust_applied and
+                self.thrust_impulse > 0):
+
+            # Calculate instantaneous velocity direction
+            velocity_vector = np.array([
+                u2,  # radial
+                u1 * u4,  # polar
+                u1 * np.sin(u3) * u6  # azimuthal
+            ])
+
+            # Normalise to get direction
+            if np.linalg.norm(velocity_vector) > 0:
+                thrust_direction = velocity_vector / np.linalg.norm(velocity_vector)
+            else:
+                thrust_direction = np.array([1, 0, 0])  # default direction if velocity is zero
+
+            # Velocity-Impulse relation
+            delta_v = self.thrust_impulse / InitialConditions.satMass
+
+            # Apply the delta_v in the velocity direction
+            # We model this as an instantaneous change in velocity components
+            u2 += delta_v * thrust_direction[0]  # radial
+            u4 += delta_v * thrust_direction[1] / u1  # polar
+            if u1 * np.sin(u3) > 0:
+                u6 += delta_v * thrust_direction[2] / (u1 * np.sin(u3))  # azimuthal
+
+            self.thrust_applied = True
+            print(f"Applied thrust at t={t}s, delta_vv={delta_v} m/s")
+
+            # Recalculate velocity magnitude after thrust
+            vel_mag = self.comb_velocity(u1, u2, u3, u4, u6)
+
+        u1_dot = u2
+        u2_dot = u1 * (u4 ** 2 + np.sin(
+            u3) ** 2 * u6 ** 2) - InitialConditions.gravConstant * InitialConditions.earthMass / u1 ** 2 - dt_start * u2 * vel_mag
+        u3_dot = u4
+        u4_dot = -2 * u2 * u4 / u1 + np.sin(u3) * np.cos(u3) * u6 ** 2 - dt_start * u4 * vel_mag
+        u5_dot = u6
+        u6_dot = -2 * u2 * u6 / u1 - 2 * (1 / np.tan(u3)) * u4 * u6 - dt_start * u6 * vel_mag
 
         return np.array([u1_dot, u2_dot, u3_dot, u4_dot, u5_dot, u6_dot])

@@ -1,6 +1,6 @@
 import WriteToFiles
-import RadarModule
-from RadarModule import *
+from dosts import RadarModule
+from dosts.RadarModule import *
 from CrudeInitialConditions import InitialConditions as IC
 from NumericalIntegrator import Integrator
 

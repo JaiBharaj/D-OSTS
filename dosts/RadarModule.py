@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def distribute_radars2D(Hdark, R_earth):
     distribution_angle = np.arccos(R_earth / (R_earth + Hdark))
     num_stations = int(np.ceil(np.pi / distribution_angle))
@@ -25,13 +26,16 @@ def distribute_radars3D(H_dark, R_Earth):
     theta, phi = fibonacci_sphere_grid(num_stations)
     return np.column_stack((np.full(num_stations, R_Earth), theta, phi))
 
-def initialise_radar_stations(mode, radar_positions):
+def initialise_radar_stations(mode, radar_positions, radar_angle, radar_noise_base, radar_noise_scalefactor):
     radars = []
     for i, position in enumerate(radar_positions):
         radar = Radar(
             mode=mode,
             ID=f"Radar_{i}",
             location=position,
+            visibility_angle=radar_angle,
+            sigma_0=radar_noise_base,
+            k=radar_noise_scalefactor
         )
         radars.append(radar)
     return radars
@@ -75,13 +79,13 @@ def combine_radar_measurements(mode, radars, true_traj):
 
 
 class Radar:
-    def __init__(self, mode, ID, location):
+    def __init__(self, mode, ID, location, visibility_angle=np.pi/2, sigma_0=50, k=0.05):
         self.__ID = ID
         self.__mode = mode.upper()  # 2D or 3D
         self.__location = np.array(location)
-        self.__visibility_angle = np.pi / 2  # 80-90 degrees
-        self.__sigma_0 = 35  # baseline error typically 10-50m
-        self.__k = 0.0005  # scaling factor typically 0.01-0.05 m/km
+        self.__visibility_angle = visibility_angle # 80-90 degrees
+        self.__sigma_0 = sigma_0  # baseline error typically 10-50m
+        self.__k = k  # scaling factor typically 0.01-0.05 m/km
         self.__noise = None
         self.satellite_measurements = {'time': [], 'visibility': [], 'r': [], 'theta': [], 'phi': []}
         if mode.upper() != '2D' and mode.upper() != '3D':

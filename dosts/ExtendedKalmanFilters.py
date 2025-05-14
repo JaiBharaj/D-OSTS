@@ -1,6 +1,7 @@
 import numpy as np
-from .CrudeInitialConditions import InitialConditions
-from .CoordinateTransformations import spherical_to_cartesian
+from CrudeInitialConditions import InitialConditions
+from CoordinateTransformations import spherical_to_cartesian
+
 
 class ExtendedKalmanFilter:
     """
@@ -31,8 +32,8 @@ class ExtendedKalmanFilter:
         self.x = x0.copy()
         self.P = P0.copy()
         self.integrator = integrator
-        self.pred_trajectory = {'t': [], 'r': [], 'theta': []}
-        self.uncertainty = {'r_var': [], 'theta_var': [], 'measured': []}
+        self.pred_trajectory = {'t': [], 'r': [], 'theta': [], 'phi': []}
+        self.uncertainty = {'r_var': [], 'theta_var': [], 'phi_var': [], 'measured': []}
 
 
     def predict(self, dt):
@@ -59,6 +60,7 @@ class ExtendedKalmanFilter:
         y = z - z_pred
 
         # 2. innovation covariance
+
         S = self.H @ self.P @ self.H.T + self.R
 
         K = np.linalg.solve(S.T, (self.P @ self.H.T).T).T
@@ -72,9 +74,12 @@ class ExtendedKalmanFilter:
 
         return self.x, self.P
 
-    def predict_trajectory(self, times, measurements, x0, P0):
-        x = x0.copy()
-        P = P0.copy()
+    def predict_single_step(self, position, dt):
+        x, P = self.predict(dt)
+        x, P = self.update(position)
+        return x, P
+
+    def predict_trajectory(self, mode, times, measurements):
 
         self.pred_trajectory['t'] = times
 
@@ -91,6 +96,7 @@ class ExtendedKalmanFilter:
 
             is_measured = False
             if not np.isnan(z).any():
+
                 x, P = self.update(z)
                 is_measured = True
 
@@ -100,11 +106,23 @@ class ExtendedKalmanFilter:
             self.uncertainty['theta_var'].append(P.copy()[2, 2])
             self.uncertainty['measured'].append(is_measured)
 
-    def get_trajectory(self):
-        return np.array([self.pred_trajectory['t'], self.pred_trajectory['r'], self.pred_trajectory['theta']]).T
+            if mode.upper()=='3D':
+                self.pred_trajectory['phi'].append(x.copy()[4])
+                self.uncertainty['phi_var'].append(P.copy()[4, 4])
 
-    def get_uncertainty(self):
-        return np.array([self.uncertainty['r_var'], self.uncertainty['theta_var'], self.uncertainty['measured']]).T
+    def get_trajectory(self, mode):
+        if mode.upper()=='2D':
+            return np.array([self.pred_trajectory['t'], self.pred_trajectory['r'], self.pred_trajectory['theta']]).T
+        else:
+            return np.array([self.pred_trajectory['t'], self.pred_trajectory['r'],
+                             self.pred_trajectory['theta'], self.pred_trajectory['phi']]).T
+
+    def get_uncertainty(self, mode):
+        if mode.upper()=='2D':
+            return np.array([self.uncertainty['r_var'], self.uncertainty['theta_var'], self.uncertainty['measured']]).T
+        else:
+            return np.array([self.uncertainty['r_var'], self.uncertainty['theta_var'],
+                           self.uncertainty['phi_var'], self.uncertainty['measured']])
 
     def crash(self, N=100, dt=1.0, max_steps=10000):
         """
