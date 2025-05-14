@@ -80,8 +80,8 @@ class Radar:
         self.__mode = mode.upper()  # 2D or 3D
         self.__location = np.array(location)
         self.__visibility_angle = np.pi / 2  # 80-90 degrees
-        self.__sigma_0 = 50  # baseline error typically 10-50m
-        self.__k = 0.05  # scaling factor typically 0.01-0.05 m/km
+        self.__sigma_0 = 35  # baseline error typically 10-50m
+        self.__k = 0.0005  # scaling factor typically 0.01-0.05 m/km
         self.__noise = None
         self.satellite_measurements = {'time': [], 'visibility': [], 'r': [], 'theta': [], 'phi': []}
         if mode.upper() != '2D' and mode.upper() != '3D':
