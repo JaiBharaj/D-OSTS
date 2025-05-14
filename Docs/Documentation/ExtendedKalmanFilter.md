@@ -57,7 +57,7 @@ def predict_trajectory(self, times, measurements, x0, P0):
 ```
 - **Purpose**: Propagates the satellite's state and covariance over a given time sequence using the Extended Kalman Filter (EKF), applying prediction and (optionally) update steps based on available measurements.
 - **Parameters**:
-  - `times` (`array-like of float`): Sequence of time stamps $[t_0, t_1, ..., t_n]$ at which the filter should step through.
+  - `times` (`array-like of float`): Sequence of time stamps [t_0, t_1, ..., t_n] at which the filter should step through.
   - `measurements` (`array-like of ndarray`): Sequence of measurement vectors. Each element corresponds to a time in `times`. If a measurement is missing at a step, it should contain `NaN` values.
   - `x0` (`ndarray`): Initial state vector of the system.
   - `P0` (`ndarray`): Initial state covariance matrix.
@@ -173,9 +173,9 @@ def compute_F_analytic(x, CD, A, m, GM, rho_func):
     ...
     return F
 ```
-* **Purpose**: Computes the Jacobian matrix $F = \frac{\partial f}{\partial x}$ for satellite motion in polar coordinates, including the effects of atmospheric drag.
+* **Purpose**: Computes the Jacobian matrix `F = ∂f/∂x` for satellite motion in polar coordinates, including the effects of atmospheric drag.
 * **Parameters**:
-  * `x` (`ndarray`, shape `(4,)`): State vector $[r, \dot{r}, \theta, \dot{\theta}]$
+  * `x` (`ndarray`, shape `(4,)`): State vector `[r, ṙ, θ, θ̇]`
   * `CD` (`float`): Drag coefficient.
   * `A` (`float`): Cross-sectional area of the satellite (in m²).
   * `m` (`float`): Mass of the satellite (in kg).
@@ -185,7 +185,7 @@ def compute_F_analytic(x, CD, A, m, GM, rho_func):
   * Computes velocity and its partial derivatives.
   * Assembles the Jacobian matrix for the 4-dimensional polar system.
   * Includes drag terms through velocity dependencies in radial and angular components.
-* **Returns**: The Jacobian matrix $\frac{\partial f}{\partial x}$ evaluated at `x`.
+* **Returns**: The Jacobian matrix `∂f/∂x` evaluated at `x`.
 
 ---
 
@@ -195,9 +195,9 @@ def compute_F_spherical(x, CD, A, m, GM, rho_func):
     return F
 ```
 
-* **Purpose**: Computes the full Jacobian matrix $F = \frac{\partial f}{\partial x}$ for satellite dynamics in spherical coordinates, considering 3D motion and atmospheric drag.
+* **Purpose**: Computes the full Jacobian matrix `F = ∂f/∂x` for satellite dynamics in spherical coordinates, considering 3D motion and atmospheric drag.
 * **Parameters**:
-  * `x` (`ndarray`, shape `(6,)`): State vector $[r, \dot{r}, \theta, \dot{\theta}, \phi, \dot{\phi}]$
+  * `x` (`ndarray`, shape `(6,)`): State vector `[r, ṙ, θ, θ̇, λ, λ̇]`
   * `CD` (`float`): Drag coefficient.
   * `A` (`float`): Cross-sectional area (m²).
   * `m` (`float`): Mass of the satellite (kg).
@@ -210,5 +210,5 @@ def compute_F_spherical(x, CD, A, m, GM, rho_func):
     * Newton’s laws in radial, polar, and azimuthal directions.
     * Trigonometric relationships (e.g., sinθ, cosθ, tanθ).
     * Drag components scaled by velocity derivatives.
-  * Ensures safe division by small $\sin^2\theta$ using a lower-bound threshold.
+  * Ensures safe division by small `sin²θ` using a lower-bound threshold.
 * **Returns**: Full Jacobian matrix of the spherical dynamic model evaluated at state `x`.
