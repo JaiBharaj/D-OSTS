@@ -14,10 +14,10 @@ class InitialConditions:
     deltaV = 80.0
     initSatAlt = 400000
     initSatTheta = 0.0
-    initSatPhi = np.pi / 2  # equatorial
+    initSatPhi = np.pi / 3  # equatorial
     initSatLam = 0.0
     initSatRdot = 0.0
-    initSatPhidot = np.radians(0.0) / 1.0
+    initSatPhidot = np.radians(0.05) / 1.0
     
     v_circ = np.sqrt(gravConstant * earthMass / (earthRadius + initSatAlt))
     v_target = v_circ - deltaV

@@ -64,7 +64,7 @@ x0 = np.array([r0,
                IC.initSatPhi,
                IC.initSatPhidot,
                IC.initSatLam,
-               0.0])
+               IC.initSatLamdot])
 
 ekf = ExtendedKalmanFilter(
     f_dynamics=f_dynamics,
@@ -78,6 +78,8 @@ ekf = ExtendedKalmanFilter(
 with open(crash_heatmap_file, 'w') as f:
     f.write("")
 with open(thrust_crash_heatmap_file, 'w') as f:
+    f.write("")
+with open(output_file, 'w') as f:
     f.write("")
 
 data = np.loadtxt(input_file)

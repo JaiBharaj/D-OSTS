@@ -203,7 +203,7 @@ class Integrator:
         phi_arr = res.y[2]
         lam_arr = res.y[4]
 
-        return np.array([t_arr, r_arr, lam_arr, phi_arr]).T
+        return np.array([t_arr, r_arr, phi_arr, lam_arr]).T
 
 
 # ------ An example to use this class ------
