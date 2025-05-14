@@ -9,11 +9,11 @@ def run_simulator(mode, H_dark=20_000, recorded_times=np.linspace(0, 6000, 6001)
                   radar_noise_base=100, radar_noise_scalefactor=0.05, input_path=None, output_path=None):
     input_path = input_path
     output_path = output_path
-    write_to_file = getattr(WriteToFiles, f"write_to_file_{mode}")
+    write_to_file = getattr(WriteToFiles, f"write_to_file_{mode.lower()}")
 
     ### GET TRUE TRAJECTORY ###
     rk = Integrator(recorded_times)
-    get_trajectory = getattr(rk, f"get_trajectory_{mode}")
+    get_trajectory = getattr(rk, f"get_trajectory_{mode.lower()}")
     true_traj = get_trajectory()
     write_to_file(input_path, true_traj)
 
