@@ -599,7 +599,8 @@ class Visualiser3D:
         # Create a sphere for Earth
         u = np.linspace(0, 2 * np.pi, 100)
         v = np.linspace(0, np.pi, 100)
-        x, y, z = spherical_to_cartesian(self.earth_radius, u, v)
+        theta, phi = np.meshgrid(u, v)
+        x, y, z = spherical_to_cartesian(self.earth_radius, theta, phi)
 
         # Plot Earth surface
         ax.plot_surface(x, y, z, color='gray', alpha=0.3)
