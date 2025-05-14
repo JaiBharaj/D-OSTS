@@ -18,6 +18,14 @@ class InitialConditions:
     initSatLam = 0.0
     initSatRdot = 0.0
     initSatPhidot = np.radians(0.0) / 1.0
+    
+    v_circ = np.sqrt(gravConstant * earthMass / (earthRadius + initSatAlt))
+    v_target = v_circ - deltaV
+    term_sq = v_target ** 2 - ((earthRadius + initSatAlt) * initSatPhidot) ** 2
+    if term_sq < 0:
+        raise ValueError("phi_dot0 too large for given Δv or orbit height")
+    
+    initSatLamdot = - np.sqrt(term_sq) / ((earthRadius + initSatAlt) * np.sin(initSatPhi))
 
     # initial settings for bonus
     populatedRadius = 50000  # radius of populated area (m)
