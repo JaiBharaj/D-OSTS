@@ -32,7 +32,7 @@ H = np.array([[1, 0, 0, 0],
 R = np.diag([sigma_r**2, sigma_theta**2])
 
 # Process noise
-Q = np.diag([1000, 0, 1e-6, 0])
+Q = np.diag([1000, 0, 1e-7, 0])
 
 # Initial uncertainty
 P0 = np.diag([
