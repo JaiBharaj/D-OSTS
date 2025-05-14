@@ -187,10 +187,6 @@ class Radar:
 
     # method to add noise and return noisy satellite recordings
     def add_noise(self):
-        if self.__mode == '2D':
-            R, theta_rad = self.__location
-        else:
-            R, theta_rad, phi_rad = self.__location
         r = self.satellite_measurements['r']
         theta_sat = self.satellite_measurements['theta']
         if self.__mode == '3D':
