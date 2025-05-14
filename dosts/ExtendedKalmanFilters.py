@@ -123,7 +123,7 @@ class ExtendedKalmanFilter:
             return np.array([self.uncertainty['r_var'], self.uncertainty['theta_var'], self.uncertainty['measured']]).T
         else:
             return np.array([self.uncertainty['r_var'], self.uncertainty['theta_var'],
-                           self.uncertainty['phi_var'], self.uncertainty['measured']])
+                           self.uncertainty['phi_var'], self.uncertainty['measured']]).T
 
     def crash(self, N=100, dt=1.0, max_steps=10000):
         """
