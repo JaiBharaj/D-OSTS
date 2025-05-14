@@ -153,7 +153,7 @@ def update(self, frame):
 - **Purpose**
   Updates the satellite trajectory animation for a given frame. This includes:
 
-  * Visualizing new actual and predicted positions
+  * Visualising new actual and predicted positions
   * Dynamically adjusting zoom view
   * Updating uncertainty regions
   * Rendering measurement points
@@ -164,23 +164,23 @@ def update(self, frame):
   * `frame` (`int`):
     Current animation frame index (required by `matplotlib.animation.FuncAnimation`, though unused explicitly).
 
-- **Procedure**
+- **Implementation**
 
-  1. **Update Actual Trajectory**
+  - **Update Actual Trajectory**
 
      * Dequeues new position data from `position_queue`.
      * Updates full and zoom views.
      * Tracks current altitude.
      * Stops animation if satellite altitude drops below impact threshold.
 
-  2. **Update Predicted Trajectory**
+  - **Update Predicted Trajectory**
 
      * Dequeues new prediction data from `prediction_queue`.
      * Updates position of predicted path and marker.
      * Computes and redraws the uncertainty region as a closed polygon based on local standard deviations (`std_x`, `std_y`).
      * Displays measurement points if available.
 
-  3. **Update Heatmap Overlay (if enabled)**
+  - **Update Heatmap Overlay (if enabled)**
 
      * Aggregates crash angles up to the current prediction time.
      * Re-renders a circular histogram (wedge-style heatmap) on the full trajectory view.
