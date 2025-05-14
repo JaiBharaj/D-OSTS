@@ -1,7 +1,7 @@
 import numpy as np
-from CrudeInitialConditions import InitialConditions
-from CoordinateTransformations import *
-from AtmosphericDensity import atmos_ussa1976_rho as atmospheric_density
+from .CrudeInitialConditions import InitialConditions
+from .CoordinateTransformations import *
+from .AtmosphericDensity import atmos_ussa1976_rho as atmospheric_density
 
 
 class PolarAccelerations:

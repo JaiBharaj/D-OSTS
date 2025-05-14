@@ -1,10 +1,10 @@
 import numpy as np
-from CrudeInitialConditions import InitialConditions as IC
+from dosts.CrudeInitialConditions import InitialConditions as IC
 from dosts.AtmosphericDensity import atmos_ussa1976_rho
 from dosts.ModelDynamics import PolarAccelerations, SphericalAccelerations
 from dosts.ExtendedKalmanFilters import ExtendedKalmanFilter, compute_F_analytic, compute_F_spherical
 from dosts.PredictorIntegrator import RK45Integrator, Integrator3D
-from WriteToFiles import write_to_file_2d, write_to_file_3d
+from dosts.WriteToFiles import write_to_file_2d, write_to_file_3d_vis
 
 
 
@@ -152,10 +152,10 @@ def run_predictor_3d(input_file_name, output_file_name, uncertainty_file_name):
     ekf.predict_trajectory('3d', times, measurements)
 
     pred_traj = ekf.get_trajectory('3d')
-    write_to_file_3d(output_file, pred_traj)
+    write_to_file_3d_vis(output_file, pred_traj)
 
-    pred_uncertainty = ekf.get_uncertainty('3d')
-    write_to_file_3d(uncertainty_file, pred_uncertainty)
+    # pred_uncertainty = ekf.get_uncertainty('3d')
+    # write_to_file_3d(uncertainty_file, pred_uncertainty)
 
 
 

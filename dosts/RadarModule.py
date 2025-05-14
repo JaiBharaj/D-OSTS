@@ -24,7 +24,7 @@ def distribute_radars3D(H_dark, R_Earth):
     area_cap = 0.5 * (1 - np.cos(theta))
     num_stations = int(np.ceil(1 / area_cap))
     theta, phi = fibonacci_sphere_grid(num_stations)
-    return np.column_stack((np.full(num_stations, R_Earth), theta, phi))
+    return np.column_stack((np.full(num_stations, R_Earth), phi, theta))
 
 def initialise_radar_stations(mode, radar_positions, radar_angle, radar_noise_base, radar_noise_scalefactor):
     radars = []
@@ -116,7 +116,7 @@ class Radar:
 
     @staticmethod
     def spherical_to_cartesian(position):
-        r, theta, phi = position
+        r, phi, theta = position
         x = r * np.sin(phi) * np.cos(theta)  # phi is polar angle, theta is azimuthal
         y = r * np.sin(phi) * np.sin(theta)
         z = r * np.cos(phi)

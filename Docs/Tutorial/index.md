@@ -166,18 +166,86 @@ radars = RadarModule.initialise_radar_stations(mode, radar_positions)
 The distribution function handles the placement of the radar stations such that there is full coverage above 
 `H_dark`. See the documentation for a further review.
 ### Full Simulation Build
-We can now write a full build for the simulator. We'll show has this 
-can be done as a reusable function.
+We can now write a full build for the simulator. We'll show how this 
+can be done as a reusable function that works for both the equatorial and 
+non-equatorial case.
 
 NOTE: The following function is not callable from `dosts`, this is only 
 a demonstration of how the simulator can be setup in your environment.
 
 ```python
+import numpy as np
+from dosts import (CrudeInitialConditions,
+                   NumericalIntegrator,
+                   RadarModule,
+                   WriteToFiles)
 
+IC = CrudeInitialConditions.InitialConditions
+Integrator = NumericalIntegrator.Integrator
+
+def run_simulator(mode, recorded_times=None):
+    input_path = f"Trajectories/{mode}_true_trajectory.txt"
+    output_path = f"Trajectories/{mode}_noisy_trajectory.txt"
+    write_to_file = getattr(WriteToFiles, f"write_to_file_{mode}")
+
+    ### GET TRUE TRAJECTORY ###
+    rk = Integrator(recorded_times)
+    get_trajectory = getattr(rk, f"get_trajectory_{mode}")
+    true_traj = get_trajectory()
+    write_to_file(input_path, true_traj)
+
+    ### NOISY RADAR MEASUREMENTS ###
+    H_dark = 200000  # Possible for no radars to see satellite below this height
+    distribute_radars = getattr(RadarModule, f"distribute_radars{mode.upper()}")
+    radar_positions = distribute_radars(H_dark, IC.earthRadius)
+
+    # Initialise radar stations
+    radars = RadarModule.initialise_radar_stations(mode, radar_positions)
+
+    # Record satellite positions in each radar
+    for measurement in true_traj:
+        sat_pos = measurement[1:]
+        for radar in radars:
+            radar.record_satellite(measurement[0], sat_pos)
+
+    # Add measurement noise
+    for radar in radars:
+        radar.add_noise()
+
+    # Combine measurements from all radars and write to file
+    noisy_traj = RadarModule.combine_radar_measurements(mode, radars, true_traj)
+    write_to_file(output_path, noisy_traj)
+
+######## GENERATING TRUE AND NOISY TRAJECTORY ##########
+run_simulator('2d') # Use '3d' for non-equatorial
 ```
 
 ## Prediction
 ### Initialisation
+To use our Extended Kalman Filter (EKF) based predictor, we first need 
+to initialise the initial conditions to push into them.
+
+```python
+from dosts.CrudeInitialConditions import InitialConditions as IC
+
+# file names
+input_file = f"Trajectories/2d_noisy_trajectory.txt"
+output_file = f"Trajectories/2d_pred_trajectory.txt"
+crash_heatmap_file = f"Trajectories/2d_crash_heatmap_data.txt"
+
+# Initial parameters
+r0 = IC.earthRadius + IC.initSatAlt
+theta0 = IC.initSatTheta
+
+CD = IC.dragCoeff
+A = IC.crossSec
+m = IC.satMass
+GM = IC.gravConstant * IC.earthMass
+```
+
+#### Measurement Model
+
+
 ### Extended Kalman Filters
 ### Full Prediction Build
 

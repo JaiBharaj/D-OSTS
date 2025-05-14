@@ -1,6 +1,6 @@
 import numpy as np
-from CrudeInitialConditions import InitialConditions
-from CoordinateTransformations import spherical_to_cartesian
+from .CrudeInitialConditions import InitialConditions
+from .CoordinateTransformations import spherical_to_cartesian
 
 
 class ExtendedKalmanFilter:
@@ -115,7 +115,8 @@ class ExtendedKalmanFilter:
             return np.array([self.pred_trajectory['t'], self.pred_trajectory['r'], self.pred_trajectory['theta']]).T
         else:
             return np.array([self.pred_trajectory['t'], self.pred_trajectory['r'],
-                             self.pred_trajectory['theta'], self.pred_trajectory['phi']]).T
+                             self.pred_trajectory['theta'], self.pred_trajectory['phi'],
+                             self.uncertainty['r_var'], self.uncertainty['theta_var'], self.uncertainty['phi_var'], self.uncertainty['measured']]).T
 
     def get_uncertainty(self, mode):
         if mode.upper()=='2D':
