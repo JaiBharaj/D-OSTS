@@ -1,7 +1,6 @@
 # Visualiser
 
 This Visualiser is a highly visual tool for displaying, analyzing, and interacting with satellite trajectories, predictions, uncertainties, and crash risk heatmaps in real-time or playback modes using both 2D and 3D animated views.
----
 
 ## Class: `Visualiser2Dr`
 
