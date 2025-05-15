@@ -1,3 +1,5 @@
+from dosts.Visualiser import Visualiser3Dfrom Demo.Baseline.BaselineVisualiser import true_traj_filefrom dosts.Visualiser import Visualiser3D
+
 # Tutorial
 This section will establish an understanding of the pre-requisite resources and 
 basic workflow for applications created with the De-Orbiting Satellite Tracking 
@@ -28,7 +30,23 @@ pip install dist/dosts-1.0.0-py3-none-any.whl
 
 And, that's it, you're ready to start!
 
+---
+
 #### Dependencies
+- Works for `Python 3.8` and above,
+- `Matplotlib 3.1.2` and above,
+- `SciPy 1.4.0` and above,
+- and `ussa1976 0.3.4`, the lastest version.
+
+It is advised to use the latest versions of each respective package. You may be 
+unfamiliar with `ussa1976`, but it can be easily installed with `pip`.
+
+```bash
+pip install ussa1976
+```
+
+---
+
 ### Environment
 Test the environment to see if D-OSTS has installed correctly.
 
@@ -73,6 +91,8 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
 
 ## Simulation
 ### True Trajectory
@@ -219,6 +239,8 @@ def run_simulator(mode, recorded_times=None):
 ######## GENERATING TRUE AND NOISY TRAJECTORY ##########
 run_simulator('2d') # Use '3d' for non-equatorial
 ```
+
+---
 
 ## Prediction
 ### Initialisation
@@ -729,4 +751,64 @@ with open(output_file, 'w') as f:
         r, theta, phi = x[0], x[2], x[4]
         f.write(f"{t:.6f} {r:.6f} {theta:.8f} {phi:.8f} "
                 f"{np.sqrt(P[0, 0]):.3f} {np.sqrt(P[2, 2]):.3e} {np.sqrt(P[4, 4]):.3e} {int(measured)}\n")
+```
+
+---
+
+NOTE: For a simpler example of a full build, refer to `Main.py`, `Simulator.py`, `Predictor.py`, and 
+`MainVisualise.py` in the GitHub Repository. These scripts are more user friendly, but simplified 
+in that they lack the functionality for grabbing crash sites and their heatmaps. It's 
+recommended to use the scripts provided in this document for full functionality.
+
+---
+
+## Visualisation
+Using the visualiser is fairly intuitive. We first need to call the visualiser we'd 
+like to use from `dosts.Visualise`, and then we can initialise our visualiser. As always, 
+lets begin with the equatorial case.
+
+```python
+from dosts.Visualiser import Visualiser2D
+
+true_traj_file = f"Trajectories/2d_true_trajectory.txt"
+pred_traj_file = f"Trajectories/2d_pred_trajectory.txt"
+crash_heat_file = f"Trajectories/2d_crash_heatmap_data.txt"
+
+vis = Visualiser2D(true_traj_file, pred_traj_file, crash_heat_file, mode='prewritten')
+vis.visualise()
+```
+
+Note the use of `mode`. If this is set to `'realtime'`, then the visualiser will work 
+on the basis that we receive noisy measurements from actual radar stations as a satellite 
+is actually de-orbiting. If nothing is set, the visualiser will defualt to `'prewritten'` mode.
+
+The non-equatorial visualiser has the exact same functionality, plus an additional 
+feature for the predicted thrust-assisted crash sites.
+
+```python
+from dosts.Visualiser import Visualiser3D
+
+true_traj_file = f"Trajectories/3d_true_trajectory.txt"
+pred_traj_file = f"Trajectories/3d_pred_trajectory.txt"
+crash_heatmap_file = f"Trajectories/3d_crash_heatmap_data.txt"
+thrust_crash_heatmap_file = f"Trajectories/3d_thrust_crash_heatmap_data.txt"
+
+vis = Visualiser3D(true_traj_file, pred_traj_file, crash_heatmap_file, thrust_crash_heatmap_file)
+vis.visualise()
+```
+
+Note that `mode` wasn't set here. As already mentioned, in the event in which no mode is provided, 
+the visualiser will default to `'prewritten'`.
+
+In both cases, the visualiser does not require an input for heatmaps. In the event of 
+no heatmap data, the visualiser will show a bisual as normal, just without the heatmapping 
+visuals. However, an input is always required for the true and predicted trajectories. In 
+a realtime event, where we don't have a true trajectory, inputting `None` is expected.
+
+```python
+>>> Visualiser3D(true_traj_file, None) # Works!
+>>> Visualiser3D(None, pred_traj_file) # Works!
+
+>>> Visualiser3D(true_traj_file) # Does NOT Work!
+>>> Visualiser3D(pred_traj_file) # Does NOT Work!
 ```
