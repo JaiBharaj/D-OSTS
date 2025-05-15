@@ -4,9 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="fe963f24-9a54-4832-9b6d-c0a8cc3c9355" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-    </list>
+    <list default="true" id="fe963f24-9a54-4832-9b6d-c0a8cc3c9355" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -51,39 +49,39 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "DefaultHtmlFileTemplate": "HTML File",
-    "JavaScript Debug.RHESSI_D-OSTS.html.executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "Python.BaselinePredictor.executor": "Run",
-    "Python.BaselineSimulator.executor": "Run",
-    "Python.BaselineSolution.executor": "Run",
-    "Python.BaselineVisualiser.executor": "Run",
-    "Python.ExtendedPredictor.executor": "Run",
-    "Python.ExtendedSolution.executor": "Run",
-    "Python.ExtensionSimulator.executor": "Run",
-    "Python.ExtensionVisualiser.executor": "Run",
-    "Python.FakeTrajectoryGenerator.executor": "Run",
-    "Python.FakeTrajectoryGenerator3D.executor": "Run",
-    "Python.Main.executor": "Run",
-    "Python.MainVisual.executor": "Run",
-    "Python.RadarModule.executor": "Run",
-    "Python.Simulator.executor": "Run",
-    "Python.Visualiser.executor": "Run",
-    "Python.__init__.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "Final",
-    "ignore.virus.scanning.warn.message": "true",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
+    &quot;JavaScript Debug.RHESSI_D-OSTS.html.executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Python.BaselinePredictor.executor&quot;: &quot;Run&quot;,
+    &quot;Python.BaselineSimulator.executor&quot;: &quot;Run&quot;,
+    &quot;Python.BaselineSolution.executor&quot;: &quot;Run&quot;,
+    &quot;Python.BaselineVisualiser.executor&quot;: &quot;Run&quot;,
+    &quot;Python.ExtendedPredictor.executor&quot;: &quot;Run&quot;,
+    &quot;Python.ExtendedSolution.executor&quot;: &quot;Run&quot;,
+    &quot;Python.ExtensionSimulator.executor&quot;: &quot;Run&quot;,
+    &quot;Python.ExtensionVisualiser.executor&quot;: &quot;Run&quot;,
+    &quot;Python.FakeTrajectoryGenerator.executor&quot;: &quot;Run&quot;,
+    &quot;Python.FakeTrajectoryGenerator3D.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Main.executor&quot;: &quot;Run&quot;,
+    &quot;Python.MainVisual.executor&quot;: &quot;Run&quot;,
+    &quot;Python.RadarModule.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Simulator.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Visualiser.executor&quot;: &quot;Run&quot;,
+    &quot;Python.__init__.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;Final&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\Jaigovind Bharaj\PycharmProjects\RHESSI\dosts" />
@@ -126,6 +124,7 @@
       <workItem from="1746873255331" duration="34220000" />
       <workItem from="1747043502824" duration="19260000" />
       <workItem from="1747210827635" duration="22305000" />
+      <workItem from="1747260583457" duration="6071000" />
     </task>
     <task id="LOCAL-00001" summary="Moved to seperate folder to keep neat when testing">
       <option name="closed" value="true" />
