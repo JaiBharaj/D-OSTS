@@ -34,6 +34,7 @@ And, that's it, you're ready to start!
 
 #### Dependencies
 - Works for `Python 3.8` and above,
+- `NumPy 1.17.3` and above,
 - `Matplotlib 3.1.2` and above,
 - `SciPy 1.4.0` and above,
 - and `ussa1976 0.3.4`, the lastest version.
