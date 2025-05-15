@@ -4,7 +4,6 @@ from dosts.AtmosphericDensity import atmos_ussa1976_rho
 from dosts.ModelDynamics import PolarAccelerations
 from dosts.ExtendedKalmanFilters import ExtendedKalmanFilter, compute_F_analytic
 from dosts.PredictorIntegrator import RK45Integrator
-from dosts.WriteToFiles import write_to_file_2d
 
 ########## TRAJECTORY PREDICTIONS WITH EXTENDED KALMAN FILTER ##########
 
@@ -88,8 +87,8 @@ for i, (t, z) in enumerate(zip(measurement_times, measurements)):
     covariances.append(P.copy())
     is_measured_flags.append(is_measured)
 
-    if i % 10000 == 0:
-        crash_angles = ekf.crash(N=10, max_steps=4000)
+    if i % 100 == 0:
+        crash_angles = ekf.crash(N=50, max_steps=4000)
         print(f"Time {t:.1f}s: {len(crash_angles)} crash predictions")
         if len(crash_angles) > 0:
             # Write timestamp followed by angles

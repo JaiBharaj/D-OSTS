@@ -243,13 +243,490 @@ m = IC.satMass
 GM = IC.gravConstant * IC.earthMass
 ```
 
-#### Measurement Model
+We now want to set up our measurement model, process noise matrix, and initial uncertainty for use in the EKF. 
+Take note of how these structures are initialised, but also consider that 
+the specific values assigned to each element is completely dependent on assumptions 
+you make about the expected noise on radar measurements in a real setting. For a more in-depth 
+explanation of how these elements should be set, refer to the documentation or, alternatively, 
+the available report.
 
+We begin with a simple equatorial case.
+
+```python
+# Measurement noise
+sigma_r, sigma_theta = 100.0, 0.0001      # meters, radians
+
+# Measurement model
+H = np.array([[1, 0, 0, 0],
+              [0, 0, 1, 0]])
+
+R = np.diag([sigma_r**2, sigma_theta**2])
+
+# Process noise
+Q = np.diag([1000, 0, 1e-7, 0])
+
+# Initial uncertainty
+P0 = np.diag([
+    10.0**2,        # r
+    1.0**2,         # vr
+    (1e-4)**2,      # theta
+    (1e-4)**2       # omega
+])
+```
+
+This can become increasingly more complex for the non-equatorial case, but we will keep it 
+simple by showcasing an example where we assume zero measurement noise on the angular velocities.
+
+```python
+# Measurement noise
+sigma_r, sigma_theta, sigma_phi = 100.0, 0.0001, 0.0001      # meters, radians, radians
+
+# Measurement model
+H = np.array([
+    [1, 0, 0, 0, 0, 0],
+    [0, 0, 1, 0, 0, 0],
+    [0, 0, 0, 0, 1, 0]
+])
+
+R = np.diag([sigma_r**2, sigma_theta**2, sigma_phi**2])
+
+# Process noise
+Q = np.zeros((6, 6))
+Q[0, 0] = 100**2
+Q[2, 2] = 1e-4**2
+Q[4, 4] = 1e-4**2
+Q[2, 4] = Q[4, 2] = 0.5 * 1e-4**2
+
+# Initial uncertainty
+P0 = np.diag([100.0, 1.0, 1e-8, 1e-8, 1e-8, 1e-8])
+```
+
+Now that we have this established, we need to set the initial state to pass into the EKF. 
+This is a known quantity ahead of time and is crucial for setting our predictor up to propagate 
+properly. Additionally, we need to compute the Jacobian matrix to be passed into the EKF, 
+but we have functions that can do this for you for both equatorial and non-equatorial cases.
+
+We start by first showing the equatorial case.
+
+```python
+from dosts.AtmosphericDensity import atmos_ussa1976_rho
+from dosts.ModelDynamics import PolarAccelerations
+from dosts.ExtendedKalmanFilters import compute_F_analytic
+
+# Model dynamics
+rho_func = lambda r: atmos_ussa1976_rho(r - IC.earthRadius)
+f_jacobian = lambda x: compute_F_analytic(x, CD, A, m, GM, rho_func=rho_func)
+f_dynamics = lambda x: PolarAccelerations.accelerations(x[0], x[1], x[2], x[3])
+x0 = np.array([r0, 0.0, theta0, np.sqrt(GM / r0) / r0])
+```
+
+Setting up the model dynamics isn't much different for the non-equatorial case. Make sure to 
+take note of the change in Jacobian claculation functions.
+
+```python
+from dosts.ModelDynamics import SphericalAccelerations
+from dosts.ExtendedKalmanFilters import compute_F_spherical
+
+# Model dynamics
+rho_func = lambda r: atmos_ussa1976_rho(r - IC.earthRadius)
+f_jacobian = lambda x: compute_F_spherical(x, CD, A, m, GM, rho_func)
+f_dynamics = lambda x: SphericalAccelerations.accelerations(*x)
+
+x0 = np.array([r0,
+               IC.initSatRdot,
+               IC.initSatPhi,
+               IC.initSatPhidot,
+               IC.initSatLam,
+               IC.initSatLamdot])
+```
+
+We can now set up the EKF and data containers just before running our prediction loop. This is a 
+simple process in that we only need to input our initialised structures, and it doesn't 
+vary much between the equatorial and non-equatorial cases.
+
+As usual, lets start with the equatorial.
+
+```python
+from dosts.ExtendedKalmanFilters import ExtendedKalmanFilter
+from dosts.PredictorIntegrator import RK45Integrator
+
+# Load radar data
+data = np.loadtxt(input_file)
+measurement_times = data[:, 0]
+measurements = data[:, 1:]
+
+# Instantiate EKF and simulate the predicted trajectory and uncertainty
+ekf = ExtendedKalmanFilter(
+    f_dynamics=f_dynamics,
+    f_jacobian=f_jacobian,
+    H=H,
+    Q=Q,
+    R=R,
+    x0=x0,
+    P0=P0,
+    integrator=RK45Integrator(CD, A, m, GM, rho_func)
+)
+
+# Reset files
+with open(crash_heatmap_file, 'w') as f:  # Clear existing file
+    f.write("")
+with open(output_file, 'w') as f:  # Clear existing file
+    f.write("")
+```
+
+And the non-equatorial case has a very similar set up - just take not in the type of 
+integrator we import (`Integrator3D()` is generally better for a general non-equatorial case). 
+Additionally, take not of the thruster heatmap file; we want to use the in-built functionality 
+for not only predicting the crash site, but also the crash site if a thruster is used.
+
+```python
+from dosts.PredictorIntegrator import Integrator3D
+
+ekf = ExtendedKalmanFilter(
+    f_dynamics=f_dynamics,
+    f_jacobian=f_jacobian,
+    H=H, Q=Q, R=R,
+    x0=x0,
+    P0=P0,
+    integrator=Integrator3D()
+)
+########## EKF EXECUTION ##########
+with open(crash_heatmap_file, 'w') as f:
+    f.write("")
+with open(thrust_crash_heatmap_file, 'w') as f:
+    f.write("")
+with open(output_file, 'w') as f:
+    f.write("")
+
+data = np.loadtxt(input_file)
+measurement_times = data[:, 0]
+measurements = data[:, 1:4]
+```
+
+This completes the initialisation phase, we now want to understand how we can predict the trajectory, crash site, and 
+thrust-assisted crash site, in a prediction loop.
 
 ### Extended Kalman Filters
-### Full Prediction Build
+The purpose of the prediction loop is to be able to take 'incoming' noisy radar measurements, 
+and produce an outputted trajectory for the satellite that becomes more accurate with 
+with more (appropriate) data. Below we see how to set this up for the equatorial case, 
+and how we can use the methods of the EKF class for predicting trajectories and crash sites.
 
-## Examples
-### Equatorial
-### Non-Equatorial
-### Thruster
+```python
+states, covariances, times, is_measured_flags = [], [], [], []
+crash_means, crash_stds = [], []
+
+for i, (t, z) in enumerate(zip(measurement_times, measurements)):
+    dt = 1e-3 if i == 0 else t - measurement_times[i - 1]
+    x, P = ekf.predict(dt)
+
+    is_measured = False
+    if not np.isnan(z).any():
+        x, P = ekf.update(z)
+        is_measured = True
+
+    times.append(t)
+    states.append(x.copy())
+    covariances.append(P.copy())
+    is_measured_flags.append(is_measured)
+
+    if i % 100 == 0:
+        crash_angles = ekf.crash(N=10, max_steps=4000)
+        print(f"Time {t:.1f}s: {len(crash_angles)} crash predictions")
+        if len(crash_angles) > 0:
+            # Write timestamp followed by angles
+            with open(crash_heatmap_file, 'a') as f:
+                f.write(f"{t:.6f} " + ' '.join(f"{angle:.6f}" for angle in crash_angles) + '\n')
+```
+
+Take note of how the crash sites are being added to the file. The order of angles is important for 
+the non-equatorial case especially as the visualiser cannot accurately display the 
+converging sites if given the wrong order. Lets have a look at how we do this:
+
+```python
+states, covariances, times, is_measured_flags = [], [], [], []
+crash_theta_means, crash_phi_means = [], []
+crash_theta_stds, crash_phi_stds = [], []
+
+crash_theta_means_thrust, crash_phi_means_thrust = [], []
+crash_theta_stds_thrust, crash_phi_stds_thrust = [], []
+
+delta_v = 5000.0  # m/s
+h_thrust = IC.hThrust  # m
+
+log_path = "Trajectories/thrust_decision_log.txt"
+with open(log_path, 'w') as f:
+    f.write("Time\tp_pop\tp_pop_thrust\tThrustDecision\n")
+
+for i, (t, z) in enumerate(zip(measurement_times, measurements)):
+    dt = 1e-3 if i == 0 else t - measurement_times[i - 1]
+    x, P = ekf.predict(dt)
+
+    is_measured = False
+    if not np.isnan(z).any():
+        x, P = ekf.update(z)
+        is_measured = True
+
+    times.append(t)
+    states.append(x.copy())
+    covariances.append(P.copy())
+    is_measured_flags.append(is_measured)
+    
+    if i % 100 == 0:
+        crash_angles = ekf.crash3D(N=50, max_steps=10000)
+        crash_angles_thrust = ekf.crash3D_with_thrust(delta_v=delta_v, h_thrust=h_thrust, N=50, max_steps=10000)
+
+        with open(crash_heatmap_file, 'a') as f:
+            f.write(f"{t:.6f} ")
+            f.write(' '.join(f"{angle:.6f}" for pair in crash_angles for angle in pair) + '\n')
+
+        with open(thrust_crash_heatmap_file, 'a') as f:
+            f.write(f"{t:.6f} ")
+            f.write(' '.join(f"{angle:.6f}" for pair in crash_angles_thrust for angle in pair) + '\n')
+```
+
+Despite the number of containers increasing with the added thrust-assisted crash site predictions, 
+the process of setting up the prediction loop is virtually the same.
+
+### Full Prediction Build
+Below are examples of how the predictor files can be set up in their entirety. Please note: 
+these are only examples, and as such, they are not importable from the package - they 
+serve only as a template for the user to follow when running under their own assumptions 
+of incoming data.
+
+#### Equatorial
+```python
+import numpy as np
+from dosts.CrudeInitialConditions import InitialConditions as IC
+from dosts.AtmosphericDensity import atmos_ussa1976_rho
+from dosts.ModelDynamics import PolarAccelerations
+from dosts.ExtendedKalmanFilters import ExtendedKalmanFilter, compute_F_analytic
+from dosts.PredictorIntegrator import RK45Integrator
+
+########## TRAJECTORY PREDICTIONS WITH EXTENDED KALMAN FILTER ##########
+
+# file names
+input_file = f"Trajectories/2d_noisy_trajectory.txt"
+output_file = f"Trajectories/2d_pred_trajectory.txt"
+crash_heatmap_file = f"Trajectories/2d_crash_heatmap_data.txt"
+
+# Initial parameters
+r0 = IC.earthRadius + IC.initSatAlt
+theta0 = IC.initSatTheta
+
+CD = IC.dragCoeff
+A = IC.crossSec
+m = IC.satMass
+GM = IC.gravConstant * IC.earthMass
+
+# Measurement noise
+sigma_r, sigma_theta = 100.0, 0.0001      # meters, radians
+
+# Measurement model
+H = np.array([[1, 0, 0, 0],
+              [0, 0, 1, 0]])
+
+R = np.diag([sigma_r**2, sigma_theta**2])
+
+# Process noise
+Q = np.diag([1000, 0, 1e-7, 0])
+
+# Initial uncertainty
+P0 = np.diag([
+    10.0**2,        # r
+    1.0**2,         # vr
+    (1e-4)**2,      # theta
+    (1e-4)**2       # omega
+])
+
+# Model dynamics
+rho_func = lambda r: atmos_ussa1976_rho(r - IC.earthRadius)
+f_jacobian = lambda x: compute_F_analytic(x, CD, A, m, GM, rho_func=rho_func)
+f_dynamics = lambda x: PolarAccelerations.accelerations(x[0], x[1], x[2], x[3])
+x0 = np.array([r0, 0.0, theta0, np.sqrt(GM / r0) / r0])
+
+# Load radar data
+data = np.loadtxt(input_file)
+measurement_times = data[:, 0]
+measurements = data[:, 1:]
+
+# Instantiate EKF and simulate the predicted trajectory and uncertainty
+ekf = ExtendedKalmanFilter(
+    f_dynamics=f_dynamics,
+    f_jacobian=f_jacobian,
+    H=H,
+    Q=Q,
+    R=R,
+    x0=x0,
+    P0=P0,
+    integrator=RK45Integrator(CD, A, m, GM, rho_func)
+)
+
+# Reset files
+with open(crash_heatmap_file, 'w') as f:  # Clear existing file
+    f.write("")
+with open(output_file, 'w') as f:  # Clear existing file
+    f.write("")
+
+states, covariances, times, is_measured_flags = [], [], [], []
+crash_means, crash_stds = [], []
+
+for i, (t, z) in enumerate(zip(measurement_times, measurements)):
+    dt = 1e-3 if i == 0 else t - measurement_times[i - 1]
+    x, P = ekf.predict(dt)
+
+    is_measured = False
+    if not np.isnan(z).any():
+        x, P = ekf.update(z)
+        is_measured = True
+
+    times.append(t)
+    states.append(x.copy())
+    covariances.append(P.copy())
+    is_measured_flags.append(is_measured)
+
+    if i % 100 == 0:
+        crash_angles = ekf.crash(N=50, max_steps=4000)
+        print(f"Time {t:.1f}s: {len(crash_angles)} crash predictions")
+        if len(crash_angles) > 0:
+            # Write timestamp followed by angles
+            with open(crash_heatmap_file, 'a') as f:
+                f.write(f"{t:.6f} " + ' '.join(f"{angle:.6f}" for angle in crash_angles) + '\n')
+
+# Save predicted trajectory
+with open(output_file, 'w') as f:
+    for t, x, P, measured in zip(times, states, covariances, is_measured_flags):
+        r, theta = x[0], x[2]
+        r_std = np.sqrt(P[0, 0])
+        theta_std = np.sqrt(P[2, 2])
+        f.write(f"{t:.6f} {r:.6f} {theta:.8f} {r_std:.6f} {theta_std:.8f} {int(measured)}\n")
+```
+
+#### Non-Equatorial
+```python
+import numpy as np
+from dosts.CrudeInitialConditions import InitialConditions as IC
+from dosts.AtmosphericDensity import atmos_ussa1976_rho
+from dosts.ModelDynamics import SphericalAccelerations
+from dosts.ExtendedKalmanFilters import ExtendedKalmanFilter, compute_F_spherical
+from dosts.PredictorIntegrator import Integrator3D
+
+########## TRAJECTORY PREDICTIONS WITH EXTENDED KALMAN FILTER ##########
+
+# file names
+input_file = f"Trajectories/3d_noisy_trajectory.txt"
+output_file = f"Trajectories/3d_pred_trajectory.txt"
+crash_heatmap_file = f"Trajectories/3d_crash_heatmap_data.txt"
+thrust_crash_heatmap_file = f"Trajectories/3d_thrust_crash_heatmap_data.txt"
+
+# Initial parameters
+r0 = IC.earthRadius + IC.initSatAlt
+theta0 = IC.initSatTheta
+phi0 = IC.initSatPhi
+
+CD = IC.dragCoeff
+A = IC.crossSec
+m = IC.satMass
+GM = IC.gravConstant * IC.earthMass
+
+# Measurement noise
+sigma_r, sigma_theta, sigma_phi = 100.0, 0.0001, 0.0001      # meters, radians, radians
+
+# Measurement model
+H = np.array([
+    [1, 0, 0, 0, 0, 0],
+    [0, 0, 1, 0, 0, 0],
+    [0, 0, 0, 0, 1, 0]
+])
+
+R = np.diag([sigma_r**2, sigma_theta**2, sigma_phi**2])
+
+# Process noise
+Q = np.zeros((6, 6))
+Q[0, 0] = 100**2
+Q[2, 2] = 1e-4**2
+Q[4, 4] = 1e-4**2
+Q[2, 4] = Q[4, 2] = 0.5 * 1e-4**2
+
+# Initial uncertainty
+P0 = np.diag([100.0, 1.0, 1e-8, 1e-8, 1e-8, 1e-8])
+
+# Model dynamics
+rho_func = lambda r: atmos_ussa1976_rho(r - IC.earthRadius)
+f_jacobian = lambda x: compute_F_spherical(x, CD, A, m, GM, rho_func)
+f_dynamics = lambda x: SphericalAccelerations.accelerations(*x)
+
+x0 = np.array([r0,
+               IC.initSatRdot,
+               IC.initSatPhi,
+               IC.initSatPhidot,
+               IC.initSatLam,
+               IC.initSatLamdot])
+
+ekf = ExtendedKalmanFilter(
+    f_dynamics=f_dynamics,
+    f_jacobian=f_jacobian,
+    H=H, Q=Q, R=R,
+    x0=x0,
+    P0=P0,
+    integrator=Integrator3D()
+)
+########## EKF EXECUTION ##########
+with open(crash_heatmap_file, 'w') as f:
+    f.write("")
+with open(thrust_crash_heatmap_file, 'w') as f:
+    f.write("")
+with open(output_file, 'w') as f:
+    f.write("")
+
+data = np.loadtxt(input_file)
+measurement_times = data[:, 0]
+measurements = data[:, 1:4]
+
+states, covariances, times, is_measured_flags = [], [], [], []
+crash_theta_means, crash_phi_means = [], []
+crash_theta_stds, crash_phi_stds = [], []
+
+crash_theta_means_thrust, crash_phi_means_thrust = [], []
+crash_theta_stds_thrust, crash_phi_stds_thrust = [], []
+
+delta_v = 5000.0  # m/s
+h_thrust = IC.hThrust  # m
+
+log_path = "Trajectories/thrust_decision_log.txt"
+with open(log_path, 'w') as f:
+    f.write("Time\tp_pop\tp_pop_thrust\tThrustDecision\n")
+
+for i, (t, z) in enumerate(zip(measurement_times, measurements)):
+    dt = 1e-3 if i == 0 else t - measurement_times[i - 1]
+    x, P = ekf.predict(dt)
+
+    is_measured = False
+    if not np.isnan(z).any():
+        x, P = ekf.update(z)
+        is_measured = True
+
+    times.append(t)
+    states.append(x.copy())
+    covariances.append(P.copy())
+    is_measured_flags.append(is_measured)
+
+    if i % 100 == 0:
+        crash_angles = ekf.crash3D(N=50, max_steps=10000)
+        crash_angles_thrust = ekf.crash3D_with_thrust(delta_v=delta_v, h_thrust=h_thrust, N=50, max_steps=10000)
+
+        with open(crash_heatmap_file, 'a') as f:
+            f.write(f"{t:.6f} ")
+            f.write(' '.join(f"{angle:.6f}" for pair in crash_angles for angle in pair) + '\n')
+
+        with open(thrust_crash_heatmap_file, 'a') as f:
+            f.write(f"{t:.6f} ")
+            f.write(' '.join(f"{angle:.6f}" for pair in crash_angles_thrust for angle in pair) + '\n')
+
+########## SAVE TRAJECTORY ##########
+with open(output_file, 'w') as f:
+    for t, x, P, measured in zip(times, states, covariances, is_measured_flags):
+        r, theta, phi = x[0], x[2], x[4]
+        f.write(f"{t:.6f} {r:.6f} {theta:.8f} {phi:.8f} "
+                f"{np.sqrt(P[0, 0]):.3f} {np.sqrt(P[2, 2]):.3e} {np.sqrt(P[4, 4]):.3e} {int(measured)}\n")
+```
