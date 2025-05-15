@@ -5,6 +5,17 @@ System (D-OSTS).
 
 ## Quickstart Guide
 ### Installation
+
+First we can try a simple `pip install`.
+
+```bash
+pip install dosts
+```
+
+If this doesn't work, then try the following:
+
+---
+
 First, after downloading the source code from the D-OSTS GitHub Repository, ensure 
 build tools is installed on your local machine. You can easily do this with 
 `pip install`.
