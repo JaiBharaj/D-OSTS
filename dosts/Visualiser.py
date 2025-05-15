@@ -13,8 +13,8 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import threading
 from queue import Queue, Empty
 from collections import deque
-from dosts.CrudeInitialConditions import InitialConditions
-from dosts.CoordinateTransformations import polar_to_cartesian, spherical_to_cartesian
+from .CrudeInitialConditions import InitialConditions
+from .CoordinateTransformations import polar_to_cartesian, spherical_to_cartesian
 
 class Visualiser2D:
     def __init__(self, trajectory_file_path, prediction_file_path, heatmap_file_path=None, measurement_times=None, break_point=0, mode='prewritten'):

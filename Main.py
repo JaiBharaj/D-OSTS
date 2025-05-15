@@ -1,6 +1,6 @@
 from Simulator import run_simulator
 from Predictor import run_predictor
-from CrudeInitialConditions import InitialConditions as IC
+from dosts.CrudeInitialConditions import InitialConditions as IC
 import numpy as np
 
 #====== CHANGE BELOW WITH YOUR INITIAL CONDITIONS ======#
