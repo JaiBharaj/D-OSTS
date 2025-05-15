@@ -4,11 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="fe963f24-9a54-4832-9b6d-c0a8cc3c9355" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dosts/__main__.py" beforeDir="false" afterPath="$PROJECT_DIR$/dosts/__main__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dosts/pyproject.toml" beforeDir="false" afterPath="$PROJECT_DIR$/dosts/pyproject.toml" afterDir="false" />
-    </list>
+    <list default="true" id="fe963f24-9a54-4832-9b6d-c0a8cc3c9355" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -135,7 +131,7 @@
       <workItem from="1747043502824" duration="19260000" />
       <workItem from="1747210827635" duration="22305000" />
       <workItem from="1747260583457" duration="8483000" />
-      <workItem from="1747285841422" duration="10561000" />
+      <workItem from="1747285841422" duration="11267000" />
     </task>
     <task id="LOCAL-00001" summary="Moved to seperate folder to keep neat when testing">
       <option name="closed" value="true" />

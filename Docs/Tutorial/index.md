@@ -1,5 +1,3 @@
-from dosts.Visualiser import Visualiser3Dfrom Demo.Baseline.BaselineVisualiser import true_traj_filefrom dosts.Visualiser import Visualiser3D
-
 # Tutorial
 This section will establish an understanding of the pre-requisite resources and 
 basic workflow for applications created with the De-Orbiting Satellite Tracking 
