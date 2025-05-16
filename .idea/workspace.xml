@@ -74,7 +74,7 @@
     &quot;Python.__init__.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;Final&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/Users/Jaigovind Bharaj/PycharmProjects/RHESSI/dosts&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
@@ -135,6 +135,7 @@
       <workItem from="1747260583457" duration="8483000" />
       <workItem from="1747285841422" duration="11267000" />
       <workItem from="1747298053133" duration="4341000" />
+      <workItem from="1747309290070" duration="104000" />
     </task>
     <task id="LOCAL-00001" summary="Moved to seperate folder to keep neat when testing">
       <option name="closed" value="true" />
