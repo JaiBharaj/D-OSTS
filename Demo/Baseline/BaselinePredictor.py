@@ -87,7 +87,7 @@ for i, (t, z) in enumerate(zip(measurement_times, measurements)):
     covariances.append(P.copy())
     is_measured_flags.append(is_measured)
 
-    if i % 100 == 0:
+    if i % 50 == 0:
         crash_angles = ekf.crash(N=50, max_steps=4000)
         print(f"Time {t:.1f}s: {len(crash_angles)} crash predictions")
         if len(crash_angles) > 0:
