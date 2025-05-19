@@ -469,6 +469,501 @@ class Visualiser2D:
         plt.tight_layout(rect=[0.0, 0.03, 1.0, 0.92])
         plt.show()
 
+class Visualiser2DExtra:
+    def __init__(self, trajectory_file_path, prediction_file_path, heatmap_file_path=None, measurement_times=None, break_point=0, mode='prewritten'):
+        # Initialise parameters
+        self.earth_radius = InitialConditions.earthRadius
+        self.stop_distance = self.earth_radius + break_point
+        self.initial_altitude = InitialConditions.initSatAlt
+        self.focus_target = 'true'  # or 'predicted'
+        self.zoom_factor = 1.0
+        self.mode = mode
+        self.measurement_times = measurement_times
+
+        # File paths
+        self.TRAJECTORY_FILE = trajectory_file_path
+        self.PREDICTION_FILE = prediction_file_path
+        self.HEATMAP_FILE = heatmap_file_path
+
+        # Data storage
+        self.trajectory = []
+        self.predictions = []
+        self.crash_angles_history = []
+        self.data_lock = threading.Lock()
+        self.position_queue = Queue()
+        self.prediction_queue = Queue()
+        self.uncertainty_polygon = None
+
+        # Heatmap data storage
+        self.heatmap_data = []  # List of (time, [angles]) tuples
+        self.current_heatmap_time = 0
+        self.heatmap_artists = []
+        self.heatmap_cmap = plt.cm.viridis
+        self.heatmap_cbar = None
+        self.heatmap_resolution = 360
+        self.heatmap_alpha = 0.7
+
+        # Setup figure
+        self.setup_plots()
+        self.fig.canvas.mpl_connect('key_press_event', self.on_key_press)
+
+    def setup_plots(self):
+        # Plot layout
+        self.fig = plt.figure(figsize=(18, 10))
+        gs = self.fig.add_gridspec(2, 2)
+
+        self.ax_full = self.fig.add_subplot(gs[:, 0])
+        self.ax_zoom = self.fig.add_subplot(gs[0, 1])
+        self.ax_hist = self.fig.add_subplot(gs[1, 1])
+
+        self.fig.suptitle('Satellite Trajectory with Prediction Uncertainty', fontsize=14, y=0.98)
+
+        # Configure axes
+        for ax in (self.ax_full, self.ax_zoom):
+            ax.set_aspect('equal')
+            earth_circle = plt.Circle((0, 0), self.earth_radius, color='blue', alpha=0.3, zorder=1)
+            ax.add_patch(earth_circle)
+            ax.grid(True, alpha=0.3)
+
+            # Add heatmap to the full view
+            self.heatmap_artists = []
+
+            # Add overlay with ticks and degree labels inside the circle
+            self.add_radial_ticks_and_labels(ax)
+
+        # Set full view limits
+        plot_radius = 7E+6
+        self.ax_full.set_xlim(-plot_radius, plot_radius)
+        self.ax_full.set_ylim(-plot_radius, plot_radius)
+        self.ax_full.set_title('Full Trajectory View')
+        self.ax_full.set_xlabel('X position (m)')
+        self.ax_full.set_ylabel('Y position (m)')
+
+        # Initialise true elements
+        self.trajectory_line_full, = self.ax_full.plot([], [], 'r-', lw=1.5, zorder=3, label='Actual')
+        self.satellite_dot_full, = self.ax_full.plot([], [], 'ro', markersize=5, zorder=4)
+        self.trajectory_line_zoom, = self.ax_zoom.plot([], [], 'r-', lw=1.5, zorder=3)
+        self.satellite_dot_zoom, = self.ax_zoom.plot([], [], 'ro', markersize=5, zorder=4)
+
+        self.heatmap_cbar = None  # Ensure this is set
+        self.init_colorbar()
+
+        # Prediction elements
+        self.pred_line_full, = self.ax_full.plot([], [], 'b-', lw=1.2, alpha=0.9, zorder=5, label='Predicted')
+        self.pred_dot_full, = self.ax_full.plot([], [], 'bo', markersize=5, zorder=4)
+        self.pred_line_zoom, = self.ax_zoom.plot([], [], 'b-', lw=1.2, alpha=0.9, zorder=5)
+        self.pred_dot_zoom, = self.ax_zoom.plot([], [], 'bo', markersize=5, zorder=4)
+        self.pred_measurements_zoom, = self.ax_zoom.plot([], [], 'go', markersize=6, zorder=6, label='Measurements')
+
+        # Altitude display
+        self.altitude_text = self.ax_zoom.text(0.02, 0.98, "Altitude: Initializing...",
+                                               transform=self.ax_zoom.transAxes, ha='left', va='top',
+                                               fontsize=11, bbox=dict(facecolor='white', alpha=0.7))
+
+        self.ax_zoom.set_title('Zoomed View with Uncertainty')
+        self.ax_zoom.legend(loc='upper right')
+
+        self.ax_hist.set_title("Crash Angle Histogram (Monte Carlo Estimate)")
+        self.ax_hist.set_xlabel("Angle (degrees)")
+        self.ax_hist.set_ylabel("Frequency")
+        self.ax_hist.set_xlim(0, 360)
+        self.ax_hist.set_xticks(np.arange(0, 361, 60))
+        self.ax_hist.set_ylim(0, 1)  # Temporary, will be updated dynamically
+        self.hist_bar_container = None  # For tracking histogram plot handles
+
+    def init_colorbar(self):
+        if self.heatmap_cbar is None:
+            sm = plt.cm.ScalarMappable(cmap=self.heatmap_cmap,
+                                       norm=plt.Normalize(vmin=0, vmax=1))
+            sm.set_array([])
+            self.heatmap_cbar = self.fig.colorbar(
+                sm, ax=self.ax_full,
+                orientation='vertical',
+                pad=0.05,
+                label='Crash Probability (relative)'
+            )
+            # Don't add to heatmap_artists so it persists
+
+    def add_radial_ticks_and_labels(self, ax):
+        num_ticks = 12
+
+        for i in range(num_ticks):
+            angle_deg = i * (360 / num_ticks)
+            angle_rad = np.deg2rad(angle_deg)
+
+            # Coordinates for the tick position on the edge of the circle
+            x_tick, y_tick = polar_to_cartesian(self.earth_radius, angle_rad)
+
+            # Draw tick
+            tick_length = - 0.01 * self.earth_radius  # -1.0 for insisde
+            tick_mult_x, tick_mult_y = polar_to_cartesian(tick_length, angle_rad)
+            tick_x = [x_tick, x_tick + tick_mult_x]
+            tick_y = [y_tick, y_tick + tick_mult_y]
+            ax.plot(tick_x, tick_y, color='black', lw=2, zorder=2)
+
+            # Add angle label
+            label_x, label_y = polar_to_cartesian(self.earth_radius * 0.85, angle_rad)
+            ax.text(label_x, label_y, f'{int(angle_deg)}°', color='black', ha='center', va='center', fontsize=10)
+
+    def on_key_press(self, event):
+        if event.key == 't':
+            self.focus_target = 'true'
+            print("Focusing on true trajectory")
+        elif event.key == 'p':
+            self.focus_target = 'predicted'
+            print("Focusing on predicted trajectory")
+        elif event.key in ['+', 'up']:
+            self.zoom_factor *= 0.9  # Zoom in
+            print(f"Zoom factor: {self.zoom_factor:.2f}")
+        elif event.key in ['-', 'down']:
+            self.zoom_factor *= 1.1  # Zoom out
+            print(f"Zoom factor: {self.zoom_factor:.2f}")
+
+    def read_next_position(self):
+        with open(self.TRAJECTORY_FILE, 'r') as f:
+            if self.mode == 'prewritten':
+                for line in f:
+                    try:
+                        _, r, theta = map(float, line.strip().split())
+                        x, y = polar_to_cartesian(r, theta)
+                        yield x, y
+                        # time.sleep(0.05)  # Simulate streaming delay
+                    except ValueError:
+                        continue
+            else:  # 'realtime'
+                while True:
+                    pos = f.tell()
+                    line = f.readline()
+                    if not line:
+                        f.seek(pos)
+                        # time.sleep(0.01)
+                        continue
+                    try:
+                        _, r, theta = map(float, line.strip().split())
+                        x, y = polar_to_cartesian(r, theta)
+                        yield x, y
+                    except ValueError:
+                        continue
+
+    def read_next_prediction(self):
+        with open(self.PREDICTION_FILE, 'r') as f:
+            if self.mode == 'prewritten':
+                for line in f:
+                    try:
+                        time, r, theta, dr, dtheta, is_meas = map(float, line.strip().split())
+                        x, y = polar_to_cartesian(r, theta)
+                        std_x = np.sqrt((dr * np.cos(theta)) ** 2 + (r * dtheta * np.sin(theta)) ** 2)
+                        std_y = np.sqrt((dr * np.sin(theta)) ** 2 + (r * dtheta * np.cos(theta)) ** 2)
+                        yield time, x, y, std_x, std_y, int(is_meas)
+                        # time.sleep(0.05)
+                    except ValueError:
+                        continue
+            else:  # realtime mode
+                while True:
+                    pos = f.tell()
+                    line = f.readline()
+                    if not line:
+                        f.seek(pos)
+                        # time.sleep(0.01)
+                        continue
+                    try:
+                        time, r, theta, dr, dtheta, is_meas = map(float, line.strip().split())
+                        x, y = polar_to_cartesian(r, theta)
+                        std_x = np.sqrt((dr * np.cos(theta)) ** 2 + (r * dtheta * np.sin(theta)) ** 2)
+                        std_y = np.sqrt((dr * np.sin(theta)) ** 2 + (r * dtheta * np.cos(theta)) ** 2)
+                        yield time, x, y, std_x, std_y, int(is_meas)
+                    except ValueError:
+                        continue
+
+    def load_data(self):
+        pos_gen = self.read_next_position()
+        pred_gen = self.read_next_prediction()
+
+        while True:
+            try:
+                self.position_queue.put(next(pos_gen))
+                self.prediction_queue.put(next(pred_gen))
+            except StopIteration:
+                pass
+            time.sleep(0.00001)
+
+    # Estimate local direction of motion from trajectory
+    def direction_of_motion(self, x1, y1, x2, y2):
+        dx = x2 - x1
+        dy = y2 - y1
+        norm = np.hypot(dx, dy)
+        if norm == 0:
+            return np.array([1, 0]), np.array([0, 1])  # fallback
+        tangent = np.array([dx, dy]) / norm
+        normal = np.array([-tangent[1], tangent[0]])
+        return tangent, normal
+
+    def load_heatmap_data(self):
+        if not self.HEATMAP_FILE:
+            return
+
+        try:
+            with open(self.HEATMAP_FILE, 'r') as f:
+                for line in f:
+                    if line.startswith('#'):
+                        continue
+                    parts = line.strip().split()
+                    if len(parts) < 2:
+                        continue
+                    timestamp = float(parts[0])
+                    angles = list(map(float, parts[1:]))
+                    self.heatmap_data.append((timestamp, angles))
+        except FileNotFoundError:
+            print(f"Heatmap file {self.HEATMAP_FILE} not found")
+
+    def update_histogram(self, angles_rad):
+        angles_deg = np.degrees(angles_rad) % 360
+
+        self.ax_hist.cla()
+        self.ax_hist.set_title("Crash Angle Histogram (Monte Carlo Estimate)")
+        self.ax_hist.set_xlabel("Angle (degrees)")
+        self.ax_hist.set_ylabel("Frequency")
+        self.ax_hist.set_xlim(0, 360)
+        self.ax_hist.set_xticks(np.arange(0, 361, 5))
+
+        plot_min = 0.95 * np.min(angles_deg)
+        plot_max = 1.05 * np.max(angles_deg)
+
+        hist_vals, bin_edges, self.hist_bar_container = self.ax_hist.hist(
+            angles_deg,
+            bins=self.heatmap_resolution,
+            range=(0, 360),
+            color='red',
+            alpha=0.7
+        )
+        self.ax_hist.set_ylim(0, max(5, hist_vals.max() * 1.2))
+        self.ax_hist.set_xlim(plot_min, plot_max)
+
+    def update_heatmap(self, current_time):
+        # Clear previous heatmap wedges
+        for artist in self.heatmap_artists:
+            try:
+                artist.remove()
+            except ValueError:
+                pass
+        self.heatmap_artists = []
+
+        if not self.heatmap_data:
+            return
+
+        # Find most recent prediction ≤ current_time
+        latest_angles = None
+        for t, angles in reversed(self.heatmap_data):
+            if t <= current_time:
+                latest_angles = angles
+                break
+
+        if not latest_angles:
+            return
+
+        # Create histogram
+        angles_rad = np.array(latest_angles) % (2 * np.pi)
+        hist, bin_edges = np.histogram(angles_rad, bins=self.heatmap_resolution, range=(0, 2 * np.pi))
+        max_count = max(1, hist.max())
+
+        # Create colored wedges
+        for i in range(self.heatmap_resolution):
+            if hist[i] == 0:
+                continue
+            start_angle = np.degrees(bin_edges[i])
+            end_angle = np.degrees(bin_edges[i + 1])
+            intensity = hist[i] / max_count
+
+            wedge = Wedge(
+                (0, 0),
+                self.earth_radius,
+                start_angle,
+                end_angle,
+                width=self.earth_radius * 0.05,
+                color=self.heatmap_cmap(intensity),
+                alpha=self.heatmap_alpha * intensity
+            )
+            self.ax_full.add_patch(wedge)
+            self.heatmap_artists.append(wedge)
+
+        # Update colorbar
+        if self.heatmap_cbar:
+            sm = plt.cm.ScalarMappable(cmap=self.heatmap_cmap,
+                                       norm=plt.Normalize(vmin=0, vmax=max_count))
+            sm.set_array([])
+            self.heatmap_cbar.update_normal(sm)
+        else:
+            self.init_colorbar()
+
+        # Update the crash angle histogram
+        self.update_histogram(angles_rad)
+
+    def update(self, frame):
+        MAX_STEPS = 50000
+
+        artists = [self.trajectory_line_full, self.satellite_dot_full,
+                   self.trajectory_line_zoom, self.satellite_dot_zoom,
+                   self.pred_line_full, self.pred_dot_full,
+                   self.pred_line_zoom, self.pred_dot_zoom,
+                   self.pred_measurements_zoom, self.altitude_text]
+
+        try:
+            # Drain all new position data
+            while True:
+                try:
+                    current_pos = self.position_queue.get_nowait()
+                    x, y = current_pos
+                    self.trajectory.append((x, y))
+                    if len(self.trajectory) > MAX_STEPS:
+                        self.trajectory = self.trajectory[-MAX_STEPS:]
+                except Empty:
+                    break
+
+            # Update actual trajectory
+            if self.trajectory:
+                xs, ys = zip(*self.trajectory)
+                x, y = self.trajectory[-1]
+
+                self.trajectory_line_full.set_data(xs, ys)
+                self.satellite_dot_full.set_data([x], [y])
+                self.trajectory_line_zoom.set_data(xs, ys)
+                self.satellite_dot_zoom.set_data([x], [y])
+
+                current_dist = np.hypot(x, y)
+                focus = None
+                if self.focus_target == 'true' and self.trajectory:
+                    focus = self.trajectory[-1]
+                elif self.focus_target == 'predicted' and self.predictions:
+                    focus = (self.predictions[-1][1], self.predictions[-1][2])
+
+                if focus:
+                    fx, fy = focus
+                    dist = np.hypot(fx, fy)
+                    base_width = max(500000, dist / 3)
+                    zoom_width = base_width * self.zoom_factor
+                    self.ax_zoom.set_xlim(fx - zoom_width / 2, fx + zoom_width / 2)
+                    self.ax_zoom.set_ylim(fy - zoom_width / 6, fy + zoom_width / 6)
+
+                altitude = current_dist - self.earth_radius
+                self.altitude_text.set_text(f"Altitude: {altitude / 1000:.1f} km\n"
+                                            f"Distance: {current_dist / 1000:.1f} km")
+
+                if current_dist <= self.stop_distance:
+                    self.ani.event_source.stop()
+                    self.altitude_text.set_text(f"IMPACT!\nFinal altitude: {altitude:.1f} m")
+                    return artists
+
+            # Drain all new prediction data
+            while True:
+                try:
+                    current_pred = self.prediction_queue.get_nowait()
+                    self.predictions.append(current_pred)
+                    if len(self.predictions) > MAX_STEPS:
+                        self.predictions = self.predictions[-MAX_STEPS:]
+                except Empty:
+                    break
+
+            # Update predicted trajectory with uncertainty
+            if self.predictions:
+                pred_ts, pred_xs, pred_ys, std_xs, std_ys, meas_flags = zip(*self.predictions)
+                pred_x, pred_y = pred_xs[-1], pred_ys[-1]
+                current_time = pred_ts[-1]
+
+                self.pred_line_full.set_data(pred_xs, pred_ys)
+                self.pred_dot_full.set_data([pred_x], [pred_y])
+                self.pred_line_zoom.set_data(pred_xs, pred_ys)
+                self.pred_dot_zoom.set_data([pred_x], [pred_y])
+
+                # Remove old uncertainty polygon
+                if self.uncertainty_polygon is not None:
+                    self.uncertainty_polygon.remove()
+
+                # Create new rotated uncertainty polygon
+                polygon_points = []
+
+                def get_direction(i, xs, ys):
+                    if 0 < i < len(xs) - 1:
+                        dx = xs[i + 1] - xs[i - 1]
+                        dy = ys[i + 1] - ys[i - 1]
+                    elif i > 0:
+                        dx = xs[i] - xs[i - 1]
+                        dy = ys[i] - ys[i - 1]
+                    elif i < len(xs) - 1:
+                        dx = xs[i + 1] - xs[i]
+                        dy = ys[i + 1] - ys[i]
+                    else:
+                        return np.array([1.0, 0.0]), np.array([0.0, 1.0])  # fallback
+
+                    norm = np.hypot(dx, dy)
+                    if norm == 0:
+                        return np.array([1.0, 0.0]), np.array([0.0, 1.0])
+                    tangent = np.array([dx, dy]) / norm
+                    normal = np.array([-tangent[1], tangent[0]])
+                    return tangent, normal
+
+                # Forward pass
+                for i in range(len(pred_xs)):
+                    x, y = pred_xs[i], pred_ys[i]
+                    sx, sy = std_xs[i], std_ys[i]
+                    polygon_points.append((x - sx, y - sy))
+
+                # Reverse pass
+                for i in reversed(range(len(pred_xs))):
+                    x, y = pred_xs[i], pred_ys[i]
+                    sx, sy = std_xs[i], std_ys[i]
+                    polygon_points.append((x + sx, y + sy))
+
+                self.uncertainty_polygon = Polygon(polygon_points, closed=True,
+                                                   color='blue', alpha=0.15, zorder=2)
+                self.ax_zoom.add_patch(self.uncertainty_polygon)
+                artists.append(self.uncertainty_polygon)
+
+                # Update measurement points
+                meas_xs = [x for x, flag in zip(pred_xs, meas_flags) if flag]
+                meas_ys = [y for y, flag in zip(pred_ys, meas_flags) if flag]
+                self.pred_measurements_zoom.set_data(meas_xs, meas_ys)
+
+                # Update heatmap for current time
+                self.update_heatmap(current_time)
+                artists.extend(self.heatmap_artists)
+
+                return artists
+
+        except Exception as e:
+            print(f"Animation error: {e}")
+
+        return artists
+
+    def visualise(self):
+        # Start data loading thread
+        data_thread = threading.Thread(target=self.load_data, daemon=True)
+        data_thread.start()
+
+        # Load heatmap data properly
+        self.load_heatmap_data()
+
+        # Load heatmap data if file exists
+        if self.HEATMAP_FILE:
+            try:
+                with open(self.HEATMAP_FILE, 'r') as f:
+                    for line in f:
+                        samples = map(float, line.strip().split())
+                        self.crash_angles_history.extend(samples)
+            except FileNotFoundError:
+                print(f"Heatmap file {self.HEATMAP_FILE} not found")
+
+        # Create animation
+        self.ani = animation.FuncAnimation(
+            self.fig, self.update,
+            frames=1000,
+            interval=50,
+            blit=False,
+            cache_frame_data=False
+        )
+
+        plt.tight_layout(rect=[0.0, 0.03, 1.0, 0.92])
+        plt.show()
+
 class Visualiser3D:
     def __init__(self, trajectory_file_path, prediction_file_path, heatmap_file_path=None, thrust_heatmap_file_path=None, break_point=0, mode='prewritten', MAX_STEPS=50000):
         # Initialise parameters
