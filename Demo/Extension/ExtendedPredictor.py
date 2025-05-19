@@ -84,7 +84,7 @@ crash_theta_stds, crash_phi_stds = [], []
 crash_theta_means_thrust, crash_phi_means_thrust = [], []
 crash_theta_stds_thrust, crash_phi_stds_thrust = [], []
 
-delta_v = 5000.0  # m/s
+delta_v = 1000.0  # m/s
 h_thrust = IC.hThrust  # m
 
 log_path = "Trajectories/thrust_decision_log.txt"
