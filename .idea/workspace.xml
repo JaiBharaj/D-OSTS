@@ -6,6 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="fe963f24-9a54-4832-9b6d-c0a8cc3c9355" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Demo/Extension/ExtensionVisualiser.py" beforeDir="false" afterPath="$PROJECT_DIR$/Demo/Extension/ExtensionVisualiser.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/dosts/Visualiser.py" beforeDir="false" afterPath="$PROJECT_DIR$/dosts/Visualiser.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -137,6 +138,7 @@
       <workItem from="1747285841422" duration="11267000" />
       <workItem from="1747298053133" duration="4341000" />
       <workItem from="1747309290070" duration="104000" />
+      <workItem from="1747689521317" duration="6089000" />
     </task>
     <task id="LOCAL-00001" summary="Moved to seperate folder to keep neat when testing">
       <option name="closed" value="true" />
@@ -231,7 +233,7 @@
     <SUITE FILE_PATH="coverage/RHESSI$RadarModule.coverage" NAME="RadarModule Coverage Results" MODIFIED="1747182024980" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/dosts" />
     <SUITE FILE_PATH="coverage/RHESSI$ExtensionSimulator.coverage" NAME="ExtensionSimulator Coverage Results" MODIFIED="1747270627197" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Demo/Extension" />
     <SUITE FILE_PATH="coverage/RHESSI$Main.coverage" NAME="Main Coverage Results" MODIFIED="1747289721755" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/RHESSI$ExtensionVisualiser.coverage" NAME="ExtensionVisualiser Coverage Results" MODIFIED="1747287864500" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Demo/Extension" />
+    <SUITE FILE_PATH="coverage/RHESSI$ExtensionVisualiser.coverage" NAME="ExtensionVisualiser Coverage Results" MODIFIED="1747695824581" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Demo/Extension" />
     <SUITE FILE_PATH="coverage/RHESSI$BaselineSolution.coverage" NAME="BaselineSolution Coverage Results" MODIFIED="1747044514248" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
