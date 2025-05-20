@@ -977,6 +977,7 @@ class Visualiser3D:
         self.zoom_scale = 1.0  # This is used in the update method
         self.zoom_factor = 1.0  # This is what your key handler modifies
         self.mode = mode
+        self.crash_toggle = 1
 
         # Heatmap parameters
         self.heatmap_data = []  # List of (time, [(theta, phi, intensity)]) tuples
@@ -1221,7 +1222,10 @@ class Visualiser3D:
             # Offset radius slightly if this is the thrust heatmap
             r = self.earth_radius
             if dataset is self.thrust_heatmap_data:
-                r *= 1.02  # 2% lift to float above nominal heatmap
+                if self.crash_toggle == 1:
+                    r *= 0.98
+                else:
+                    r *= 1.02  # 2% lift to float above nominal heatmap
 
             # Create surface coordinates
             x, y, z = spherical_to_cartesian(r, theta_mesh, phi_mesh)
@@ -1341,6 +1345,8 @@ class Visualiser3D:
         elif event.key == 'p':
             self.focus_on = 'predicted'  # Fixed variable name (was focus_target)
             print("Focusing on predicted trajectory")
+        elif event.key == 'c':
+            self.crash_toggle = - self.crash_toggle
         elif event.key in ['+', 'up']:
             self.zoom_factor *= 0.9  # Zoom in
             print(f"Zoom factor: {self.zoom_factor:.2f}")
@@ -1832,24 +1838,24 @@ class Visualiser3DExtra:
     def update_theta_phi_heatmap(self, current_time):
         # Clear previous image
         self.ax_heatmap.clear()
-        self.ax_heatmap.set_title("θ–ϕ Heatmap (Crash Distribution)")
-        self.ax_heatmap.set_xlabel("θ (radians)")
-        self.ax_heatmap.set_ylabel("ϕ (radians)")
+        self.ax_heatmap.set_title("Latitude–Longitude Heatmap (Crash Distribution)")
+        self.ax_heatmap.set_xlabel("Longitude (°)")
+        self.ax_heatmap.set_ylabel("Latitude (°)")
 
-        # Set common resolution
+        # Set resolution and matching bin edges in degrees
         resolution = self.heatmap_resolution
-        theta_edges = np.linspace(0, 2 * np.pi, resolution)
-        phi_edges = np.linspace(0, np.pi, resolution)
+        lon_bins = np.linspace(0, 360, resolution)
+        lat_bins = np.linspace(-90, 90, resolution)
 
         # Create empty histograms
         nominal_hist = np.zeros((resolution - 1, resolution - 1))
         thrust_hist = np.zeros((resolution - 1, resolution - 1))
 
-        # Collect all data points to calculate ranges
-        all_thetas = []
-        all_phis = []
+        # Store all lat/lon for axis range calculation
+        all_lons = []
+        all_lats = []
 
-        # Helper to fill histogram and collect points
+        # Helper to fill histogram and collect transformed coordinates
         def accumulate_hist(data, hist):
             current_points = []
             for t, points in data:
@@ -1857,11 +1863,16 @@ class Visualiser3DExtra:
                     current_points.extend(points)
             if current_points:
                 arr = np.array(current_points)
-                thetas = arr[:, 0] % (2 * np.pi)
-                phis = arr[:, 1] % np.pi
-                all_thetas.extend(thetas)
-                all_phis.extend(phis)
-                H, _, _ = np.histogram2d(phis, thetas, bins=[phi_edges, theta_edges])
+                thetas = arr[:, 0] % (2 * np.pi)  # [0, 2π)
+                phis = arr[:, 1] % np.pi  # [0, π)
+
+                lons = np.degrees(thetas)  # [0°, 360°)
+                lats = 90 - np.degrees(phis)  # [90°, -90°] -> flip to latitude
+
+                all_lons.extend(lons)
+                all_lats.extend(lats)
+
+                H, _, _ = np.histogram2d(lats, lons, bins=[lat_bins, lon_bins])
                 return H
             return hist
 
@@ -1871,36 +1882,36 @@ class Visualiser3DExtra:
         if self.thrust_heatmap_data:
             thrust_hist = accumulate_hist(self.thrust_heatmap_data, thrust_hist)
 
-        # Calculate axis limits with 5% padding (similar to update_histogram)
-        if all_thetas:  # If we have data
-            theta_min = max(0, 0.95 * np.min(all_thetas))
-            theta_max = min(2 * np.pi, 1.05 * np.max(all_thetas))
-            phi_min = max(0, 0.95 * np.min(all_phis))
-            phi_max = min(np.pi, 1.05 * np.max(all_phis))
-        else:  # Default to full range if no data
-            theta_min, theta_max = 0, 2 * np.pi
-            phi_min, phi_max = 0, np.pi
-
-        # Normalize
+        # Normalize histograms
         nominal_hist /= (nominal_hist.max() or 1)
         thrust_hist /= (thrust_hist.max() or 1)
 
-        # Combine in RGB: B=nominal, G=thrust
+        # Combine in RGB: R = nominal, G = thrust
         combined_rgb = np.zeros((nominal_hist.shape[0], nominal_hist.shape[1], 3))
-        combined_rgb[..., 1] = thrust_hist  # Green
-        combined_rgb[..., 0] = nominal_hist  # Red
+        combined_rgb[..., 0] = nominal_hist  # Red channel
+        combined_rgb[..., 1] = thrust_hist  # Green channel
 
-        # Show image with full extent but set axis limits to data range
-        img = self.ax_heatmap.imshow(
-            np.flipud(combined_rgb),  # Flip vertically for correct phi orientation
-            extent=[0, 2 * np.pi, 0, np.pi],  # Keep full extent for proper scaling
+        # Determine extent and axis limits
+        extent = [lon_bins[0], lon_bins[-1], lat_bins[0], lat_bins[-1]]
+
+        if all_lons and all_lats:
+            lon_min = max(0, 0.95 * min(all_lons))
+            lon_max = min(360, 1.05 * max(all_lons))
+            lat_min = max(-90, 0.95 * min(all_lats))
+            lat_max = min(90, 1.05 * max(all_lats))
+        else:
+            lon_min, lon_max = 0, 360
+            lat_min, lat_max = -90, 90
+
+        # Display the heatmap
+        self.ax_heatmap.imshow(
+            np.flipud(combined_rgb),
+            extent=extent,
             aspect='auto',
             origin='lower'
         )
-
-        # Set axis limits to focus on data range (like in update_histogram)
-        self.ax_heatmap.set_xlim(theta_min, theta_max)
-        self.ax_heatmap.set_ylim(phi_min, phi_max)
+        self.ax_heatmap.set_xlim(lon_min, lon_max)
+        self.ax_heatmap.set_ylim(lat_min, lat_max)
 
     def update_heatmap(self, current_time):
         # Clear previous heatmaps
