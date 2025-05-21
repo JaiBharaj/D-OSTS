@@ -944,10 +944,10 @@ class Visualiser2DExtra:
         data_thread = threading.Thread(target=self.load_data, daemon=True)
         data_thread.start()
 
-        # Load heatmap data properly
+        # Load heatmap data
         self.load_heatmap_data()
 
-        # Load heatmap data if file exists
+        # Load crash angle history if heatmap file exists
         if self.HEATMAP_FILE:
             try:
                 with open(self.HEATMAP_FILE, 'r') as f:
@@ -956,6 +956,10 @@ class Visualiser2DExtra:
                         self.crash_angles_history.extend(samples)
             except FileNotFoundError:
                 print(f"Heatmap file {self.HEATMAP_FILE} not found")
+
+        # Optional: Set background color to avoid alpha issues
+        for ax in self.fig.axes:
+            ax.set_facecolor('white')
 
         # Create animation
         self.ani = animation.FuncAnimation(
@@ -966,13 +970,19 @@ class Visualiser2DExtra:
             cache_frame_data=False
         )
 
-        # Save as GIF using Pillow
-        self.ani.save("visualiser2DExtra.gif", writer=animation.PillowWriter(fps=20))
+        # Use explicit PillowWriter to handle GIF saving better
+        try:
+            writer = animation.PillowWriter(fps=20, metadata=dict(artist='RHESSI'), bitrate=1800)
+            self.ani.save('visualiser2DExtra.gif', writer=writer)
+            print("GIF saved successfully as 'visualiser2DExtra.gif'")
+        except Exception as e:
+            print(f"Error while saving GIF: {e}")
 
-        print("GIF saved as 'visualiser2DExtra.gif'")
+        plt.close()  # Prevents residual display
 
-        plt.tight_layout(rect=[0.0, 0.03, 1.0, 0.92])
-        plt.show()
+        # (Optional) Show static layout if needed — only for debugging
+        # plt.tight_layout(rect=[0.0, 0.03, 1.0, 0.92])
+        # plt.show()
 
 class Visualiser3D:
     def __init__(self, trajectory_file_path, prediction_file_path, heatmap_file_path=None, thrust_heatmap_file_path=None, break_point=0, mode='prewritten', MAX_STEPS=50000):
