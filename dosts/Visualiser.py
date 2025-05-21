@@ -466,13 +466,14 @@ class Visualiser2D:
             cache_frame_data=False
         )
 
-        # Save as GIF using Pillow
-        self.ani.save("visualiser2D.gif", writer=animation.PillowWriter(fps=20))
+        # Save as MP4 using FFmpeg
+        writer = animation.FFMpegWriter(fps=20, metadata=dict(artist='Me'), bitrate=1800)
+        self.ani.save("visualiser2D.mp4", writer=writer)
 
-        print("GIF saved as 'visualiser2D.gif'")
+        print("MP4 saved as 'visualiser2D.mp4'")
 
         plt.tight_layout(rect=[0.0, 0.03, 1.0, 0.92])
-        # plt.show()
+        plt.show()
 
 class Visualiser2DExtra:
     def __init__(self, trajectory_file_path, prediction_file_path, heatmap_file_path=None, measurement_times=None, break_point=0, mode='prewritten'):
@@ -966,13 +967,14 @@ class Visualiser2DExtra:
             cache_frame_data=False
         )
 
-        # Save as GIF using Pillow
-        self.ani.save("visualiser2DExtra.gif", writer=animation.PillowWriter(fps=20))
+        # Save as MP4 using FFmpeg
+        writer = animation.FFMpegWriter(fps=20, metadata=dict(artist='Me'), bitrate=1800)
+        self.ani.save("visualiser2DExtra.mp4", writer=writer)
 
-        print("GIF saved as 'visualiser2DExtra.gif'")
+        print("MP4 saved as 'visualiser2DExtra.mp4'")
 
         plt.tight_layout(rect=[0.0, 0.03, 1.0, 0.92])
-        # plt.show()
+        plt.show()
 
 
 class Visualiser3D:
