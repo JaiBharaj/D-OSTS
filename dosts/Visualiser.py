@@ -218,7 +218,7 @@ class Visualiser2D:
                 self.prediction_queue.put(next(pred_gen))
             except StopIteration:
                 pass
-            time.sleep(0.00001)
+            time.sleep(0.1)
 
     # Estimate local direction of motion from trajectory
     def direction_of_motion(self, x1, y1, x2, y2):
@@ -472,7 +472,7 @@ class Visualiser2D:
         print("GIF saved as 'visualiser2D.gif'")
 
         plt.tight_layout(rect=[0.0, 0.03, 1.0, 0.92])
-        plt.show()
+        # plt.show()
 
 class Visualiser2DExtra:
     def __init__(self, trajectory_file_path, prediction_file_path, heatmap_file_path=None, measurement_times=None, break_point=0, mode='prewritten'):
@@ -690,7 +690,7 @@ class Visualiser2DExtra:
                 self.prediction_queue.put(next(pred_gen))
             except StopIteration:
                 pass
-            time.sleep(0.00001)
+            time.sleep(0.1)
 
     # Estimate local direction of motion from trajectory
     def direction_of_motion(self, x1, y1, x2, y2):
@@ -939,35 +939,39 @@ class Visualiser2DExtra:
 
         return artists
 
-    def visualise(self, save_gif=False, gif_path='vis2DExtra.gif', gif_fps=20, max_frames=2000):
-        # Load heatmap data before animation starts
+    def visualise(self):
+        # Start data loading thread
+        data_thread = threading.Thread(target=self.load_data, daemon=True)
+        data_thread.start()
+
+        # Load heatmap data properly
         self.load_heatmap_data()
 
-        # Start background thread to read data
-        threading.Thread(target=self.load_data, daemon=True).start()
+        # Load heatmap data if file exists
+        if self.HEATMAP_FILE:
+            try:
+                with open(self.HEATMAP_FILE, 'r') as f:
+                    for line in f:
+                        samples = map(float, line.strip().split())
+                        self.crash_angles_history.extend(samples)
+            except FileNotFoundError:
+                print(f"Heatmap file {self.HEATMAP_FILE} not found")
 
-        def update_and_return_artists(frame):
-            self.update(frame)
-            return self.ax_full.patches + self.ax_zoom.patches + self.ax_hist.patches
-
+        # Create animation
         self.ani = animation.FuncAnimation(
-            self.fig,
-            update_and_return_artists,
+            self.fig, self.update,
+            frames=1000,
             interval=50,
             blit=False,
-            repeat=False,
-            frames=max_frames
+            cache_frame_data=False
         )
 
-        if save_gif:
-            try:
-                from matplotlib.animation import PillowWriter
-                writer = PillowWriter(fps=gif_fps)
-                self.ani.save(gif_path, writer=writer)
-                print(f"GIF saved to {gif_path}")
-            except Exception as e:
-                print(f"Error while saving GIF: {e}")
+        # Save as GIF using Pillow
+        self.ani.save("visualiser2DExtra.gif", writer=animation.PillowWriter(fps=20))
 
+        print("GIF saved as 'visualiser2DExtra.gif'")
+
+        plt.tight_layout(rect=[0.0, 0.03, 1.0, 0.92])
         # plt.show()
 
 
