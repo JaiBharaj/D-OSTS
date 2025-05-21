@@ -5,10 +5,31 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="fe963f24-9a54-4832-9b6d-c0a8cc3c9355" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/Demo/Bonus1k/ExtendedPredictor.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Demo/Bonus1k/ExtensionSimulator.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Demo/Bonus1k/ExtensionVisualiser.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Demo/Bonus1k/Trajectories/3d_crash_heatmap_data.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Demo/Bonus1k/Trajectories/3d_noisy_trajectory.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Demo/Bonus1k/Trajectories/3d_pred_trajectory.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Demo/Bonus1k/Trajectories/3d_thrust_crash_heatmap_data.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Demo/Bonus1k/Trajectories/3d_true_trajectory.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Demo/Bonus1k/Trajectories/thrust_decision_log.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Demo/Bonus1k/extensionPRED.slurm" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Demo/Bonus1k/slurm-4953298.out" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Demo/Bonus3k/ExtendedPredictor.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Demo/Bonus3k/ExtensionSimulator.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Demo/Bonus3k/ExtensionVisualiser.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Demo/Bonus3k/Trajectories/3d_crash_heatmap_data.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Demo/Bonus3k/Trajectories/3d_noisy_trajectory.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Demo/Bonus3k/Trajectories/3d_pred_trajectory.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Demo/Bonus3k/Trajectories/3d_thrust_crash_heatmap_data.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Demo/Bonus3k/Trajectories/3d_true_trajectory.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Demo/Bonus3k/Trajectories/thrust_decision_log.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Demo/Bonus3k/extensionPRED.slurm" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Demo/Bonus3k/slurm-4953298.out" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Demo/Baseline/BaselineVisualiser.py" beforeDir="false" afterPath="$PROJECT_DIR$/Demo/Baseline/BaselineVisualiser.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Demo/Extension/ExtensionVisualiser.py" beforeDir="false" afterPath="$PROJECT_DIR$/Demo/Extension/ExtensionVisualiser.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dosts/Visualiser.py" beforeDir="false" afterPath="$PROJECT_DIR$/dosts/Visualiser.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dosts/CrudeInitialConditions.py" beforeDir="false" afterPath="$PROJECT_DIR$/dosts/CrudeInitialConditions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dosts/NumericalIntegrator.py" beforeDir="false" afterPath="$PROJECT_DIR$/dosts/NumericalIntegrator.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -54,42 +75,44 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
-    &quot;JavaScript Debug.RHESSI_D-OSTS.html.executor&quot;: &quot;Run&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;Python.BaselinePredictor.executor&quot;: &quot;Run&quot;,
-    &quot;Python.BaselineSimulator.executor&quot;: &quot;Run&quot;,
-    &quot;Python.BaselineSolution.executor&quot;: &quot;Run&quot;,
-    &quot;Python.BaselineVisualiser.executor&quot;: &quot;Run&quot;,
-    &quot;Python.ExtendedPredictor.executor&quot;: &quot;Run&quot;,
-    &quot;Python.ExtendedSolution.executor&quot;: &quot;Run&quot;,
-    &quot;Python.ExtensionSimulator.executor&quot;: &quot;Run&quot;,
-    &quot;Python.ExtensionVisualiser.executor&quot;: &quot;Run&quot;,
-    &quot;Python.FakeTrajectoryGenerator.executor&quot;: &quot;Run&quot;,
-    &quot;Python.FakeTrajectoryGenerator3D.executor&quot;: &quot;Run&quot;,
-    &quot;Python.Main.executor&quot;: &quot;Run&quot;,
-    &quot;Python.MainVisual.executor&quot;: &quot;Run&quot;,
-    &quot;Python.RadarModule.executor&quot;: &quot;Run&quot;,
-    &quot;Python.Simulator.executor&quot;: &quot;Run&quot;,
-    &quot;Python.Visualiser.executor&quot;: &quot;Run&quot;,
-    &quot;Python.__init__.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/Jaigovind Bharaj/PycharmProjects/RHESSI/dosts&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "DefaultHtmlFileTemplate": "HTML File",
+    "JavaScript Debug.RHESSI_D-OSTS.html.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Python.BaselinePredictor.executor": "Run",
+    "Python.BaselineSimulator.executor": "Run",
+    "Python.BaselineSolution.executor": "Run",
+    "Python.BaselineVisualiser.executor": "Run",
+    "Python.ExtendedPredictor.executor": "Run",
+    "Python.ExtendedSolution.executor": "Run",
+    "Python.ExtensionSimulator.executor": "Run",
+    "Python.ExtensionVisualiser.executor": "Run",
+    "Python.FakeTrajectoryGenerator.executor": "Run",
+    "Python.FakeTrajectoryGenerator3D.executor": "Run",
+    "Python.Main.executor": "Run",
+    "Python.MainVisual.executor": "Run",
+    "Python.RadarModule.executor": "Run",
+    "Python.Simulator.executor": "Run",
+    "Python.Visualiser.executor": "Run",
+    "Python.__init__.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "main",
+    "ignore.virus.scanning.warn.message": "true",
+    "last_opened_file_path": "C:/Users/Jaigovind Bharaj/PycharmProjects/RHESSI/Demo/Bonus3k",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\Jaigovind Bharaj\PycharmProjects\RHESSI\Demo\Bonus3k" />
+      <recent name="C:\Users\Jaigovind Bharaj\PycharmProjects\RHESSI\Demo\Bonus1k" />
       <recent name="C:\Users\Jaigovind Bharaj\PycharmProjects\RHESSI\dosts" />
       <recent name="C:\Users\Jaigovind Bharaj\PycharmProjects\RHESSI" />
     </key>
@@ -140,7 +163,8 @@
       <workItem from="1747298053133" duration="4341000" />
       <workItem from="1747309290070" duration="104000" />
       <workItem from="1747689521317" duration="6512000" />
-      <workItem from="1747738206470" duration="6000000" />
+      <workItem from="1747738206470" duration="6309000" />
+      <workItem from="1747751548437" duration="5425000" />
     </task>
     <task id="LOCAL-00001" summary="Moved to seperate folder to keep neat when testing">
       <option name="closed" value="true" />
@@ -223,7 +247,7 @@
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/RHESSI$__init__.coverage" NAME="__init__ Coverage Results" MODIFIED="1747087991755" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/dosts" />
     <SUITE FILE_PATH="coverage/RHESSI$FakeTrajectoryGenerator.coverage" NAME="FakeTrajectoryGenerator Coverage Results" MODIFIED="1746361600737" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Visualiser Testing" />
-    <SUITE FILE_PATH="coverage/RHESSI$BaselineVisualiser.coverage" NAME="BaselineVisualiser Coverage Results" MODIFIED="1747740130846" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Demo/Baseline" />
+    <SUITE FILE_PATH="coverage/RHESSI$BaselineVisualiser.coverage" NAME="BaselineVisualiser Coverage Results" MODIFIED="1747751590322" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Demo/Baseline" />
     <SUITE FILE_PATH="coverage/RHESSI$ExtendedSolution.coverage" NAME="ExtendedSolution Coverage Results" MODIFIED="1747133197133" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/RHESSI$Simulator.coverage" NAME="Simulator Coverage Results" MODIFIED="1747135556988" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/RHESSI$BaselineSimulator.coverage" NAME="BaselineSimulator Coverage Results" MODIFIED="1747270623922" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Demo/Baseline" />
@@ -233,9 +257,9 @@
     <SUITE FILE_PATH="coverage/RHESSI$FakeTrajectoryGenerator3D.coverage" NAME="FakeTrajectoryGenerator3D Coverage Results" MODIFIED="1746534571080" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Visualiser Testing" />
     <SUITE FILE_PATH="coverage/RHESSI$BaselinePredictor.coverage" NAME="BaselinePredictor Coverage Results" MODIFIED="1747270777406" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Demo/Baseline" />
     <SUITE FILE_PATH="coverage/RHESSI$RadarModule.coverage" NAME="RadarModule Coverage Results" MODIFIED="1747182024980" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/dosts" />
-    <SUITE FILE_PATH="coverage/RHESSI$ExtensionSimulator.coverage" NAME="ExtensionSimulator Coverage Results" MODIFIED="1747270627197" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Demo/Extension" />
     <SUITE FILE_PATH="coverage/RHESSI$Main.coverage" NAME="Main Coverage Results" MODIFIED="1747289721755" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/RHESSI$ExtensionVisualiser.coverage" NAME="ExtensionVisualiser Coverage Results" MODIFIED="1747748420544" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Demo/Extension" />
+    <SUITE FILE_PATH="coverage/RHESSI$ExtensionSimulator.coverage" NAME="ExtensionSimulator Coverage Results" MODIFIED="1747820438999" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Demo/Bonus1k" />
+    <SUITE FILE_PATH="coverage/RHESSI$ExtensionVisualiser.coverage" NAME="ExtensionVisualiser Coverage Results" MODIFIED="1747820483742" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Demo/Bonus1k" />
     <SUITE FILE_PATH="coverage/RHESSI$BaselineSolution.coverage" NAME="BaselineSolution Coverage Results" MODIFIED="1747044514248" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

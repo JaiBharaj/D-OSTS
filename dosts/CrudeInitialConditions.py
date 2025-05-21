@@ -35,5 +35,5 @@ class InitialConditions:
         (np.radians(48.8566), np.radians(2.3522)),  # Paris
         (np.radians(34.0522), np.radians(-118.2437)),  # Los Angeles
     ]
-    hThrust = 100000  # height of thrust (m)
-    deltaV_from_thrust = 200  # velocity increasing value (m/s)
+    hThrust = 6494196.3147819545 - earthRadius  # height of thrust (m)
+    deltaV_from_thrust = 20  # velocity increasing value (m/s)

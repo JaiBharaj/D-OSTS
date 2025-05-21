@@ -142,7 +142,7 @@ class Integrator:
         r_imp, phi_imp, lam_imp = sol0.y[0, -1], sol0.y[2, -1], sol0.y[4, -1]
 
         # use thrust or not
-        if Integrator.in_populated(phi_imp, lam_imp) or bonus:
+        if bonus:
             print("Need thrust")
             # integrate to thrust height
             sol1 = solve_ivp(
