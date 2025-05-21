@@ -966,6 +966,11 @@ class Visualiser2DExtra:
             cache_frame_data=False
         )
 
+        # Save as GIF using Pillow
+        self.ani.save("visualiser2DExtra.gif", writer=animation.PillowWriter(fps=20))
+
+        print("GIF saved as 'visualiser2DExtra.gif'")
+
         plt.tight_layout(rect=[0.0, 0.03, 1.0, 0.92])
         plt.show()
 
