@@ -939,50 +939,37 @@ class Visualiser2DExtra:
 
         return artists
 
-    def visualise(self):
-        # Start data loading thread
-        data_thread = threading.Thread(target=self.load_data, daemon=True)
-        data_thread.start()
-
-        # Load heatmap data
+    def visualise(self, save_gif=False, gif_path='vis2DExtra.gif', gif_fps=20, max_frames=2000):
+        # Load heatmap data before animation starts
         self.load_heatmap_data()
 
-        # Load crash angle history if heatmap file exists
-        if self.HEATMAP_FILE:
-            try:
-                with open(self.HEATMAP_FILE, 'r') as f:
-                    for line in f:
-                        samples = map(float, line.strip().split())
-                        self.crash_angles_history.extend(samples)
-            except FileNotFoundError:
-                print(f"Heatmap file {self.HEATMAP_FILE} not found")
+        # Start background thread to read data
+        threading.Thread(target=self.load_data, daemon=True).start()
 
-        # Optional: Set background color to avoid alpha issues
-        for ax in self.fig.axes:
-            ax.set_facecolor('white')
+        def update_and_return_artists(frame):
+            self.update(frame)
+            return self.ax_full.patches + self.ax_zoom.patches + self.ax_hist.patches
 
-        # Create animation
         self.ani = animation.FuncAnimation(
-            self.fig, self.update,
-            frames=1000,
+            self.fig,
+            update_and_return_artists,
             interval=50,
             blit=False,
-            cache_frame_data=False
+            repeat=False,
+            frames=max_frames
         )
 
-        # Use explicit PillowWriter to handle GIF saving better
-        try:
-            writer = animation.PillowWriter(fps=20, metadata=dict(artist='RHESSI'), bitrate=1800)
-            self.ani.save('visualiser2DExtra.gif', writer=writer)
-            print("GIF saved successfully as 'visualiser2DExtra.gif'")
-        except Exception as e:
-            print(f"Error while saving GIF: {e}")
+        if save_gif:
+            try:
+                from matplotlib.animation import PillowWriter
+                writer = PillowWriter(fps=gif_fps)
+                self.ani.save(gif_path, writer=writer)
+                print(f"GIF saved to {gif_path}")
+            except Exception as e:
+                print(f"Error while saving GIF: {e}")
 
-        plt.close()  # Prevents residual display
-
-        # (Optional) Show static layout if needed — only for debugging
-        # plt.tight_layout(rect=[0.0, 0.03, 1.0, 0.92])
         # plt.show()
+
 
 class Visualiser3D:
     def __init__(self, trajectory_file_path, prediction_file_path, heatmap_file_path=None, thrust_heatmap_file_path=None, break_point=0, mode='prewritten', MAX_STEPS=50000):
