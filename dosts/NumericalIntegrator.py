@@ -68,7 +68,7 @@ class Integrator:
 
     def runge_kutta45_2d(self):
         v0 = np.sqrt(self.mu / self.r0)
-        theta_dot0 = (v0 - 80) / self.r0
+        theta_dot0 = (v0 - IC.deltaV) / self.r0
 
         y0 = np.array([
             self.r0,
