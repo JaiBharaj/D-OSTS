@@ -5,31 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="fe963f24-9a54-4832-9b6d-c0a8cc3c9355" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/Demo/Bonus1k/ExtendedPredictor.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Demo/Bonus1k/ExtensionSimulator.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Demo/Bonus1k/ExtensionVisualiser.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Demo/Bonus1k/Trajectories/3d_crash_heatmap_data.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Demo/Bonus1k/Trajectories/3d_noisy_trajectory.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Demo/Bonus1k/Trajectories/3d_pred_trajectory.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Demo/Bonus1k/Trajectories/3d_thrust_crash_heatmap_data.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Demo/Bonus1k/Trajectories/3d_true_trajectory.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Demo/Bonus1k/Trajectories/thrust_decision_log.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Demo/Bonus1k/extensionPRED.slurm" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Demo/Bonus1k/slurm-4953298.out" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Demo/Bonus3k/ExtendedPredictor.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Demo/Bonus3k/ExtensionSimulator.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Demo/Bonus3k/ExtensionVisualiser.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Demo/Bonus3k/Trajectories/3d_crash_heatmap_data.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Demo/Bonus3k/Trajectories/3d_noisy_trajectory.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Demo/Bonus3k/Trajectories/3d_pred_trajectory.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Demo/Bonus3k/Trajectories/3d_thrust_crash_heatmap_data.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Demo/Bonus3k/Trajectories/3d_true_trajectory.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Demo/Bonus3k/Trajectories/thrust_decision_log.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Demo/Bonus3k/extensionPRED.slurm" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Demo/Bonus3k/slurm-4953298.out" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dosts/CrudeInitialConditions.py" beforeDir="false" afterPath="$PROJECT_DIR$/dosts/CrudeInitialConditions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dosts/NumericalIntegrator.py" beforeDir="false" afterPath="$PROJECT_DIR$/dosts/NumericalIntegrator.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dosts/Visualiser.py" beforeDir="false" afterPath="$PROJECT_DIR$/dosts/Visualiser.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -164,7 +141,7 @@
       <workItem from="1747309290070" duration="104000" />
       <workItem from="1747689521317" duration="6512000" />
       <workItem from="1747738206470" duration="6309000" />
-      <workItem from="1747751548437" duration="5425000" />
+      <workItem from="1747751548437" duration="6617000" />
     </task>
     <task id="LOCAL-00001" summary="Moved to seperate folder to keep neat when testing">
       <option name="closed" value="true" />

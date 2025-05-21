@@ -466,6 +466,11 @@ class Visualiser2D:
             cache_frame_data=False
         )
 
+        # Save as GIF using Pillow
+        self.ani.save("visualiser2D.gif", writer=animation.PillowWriter(fps=20))
+
+        print("GIF saved as 'visualiser2D.gif'")
+
         plt.tight_layout(rect=[0.0, 0.03, 1.0, 0.92])
         plt.show()
 
